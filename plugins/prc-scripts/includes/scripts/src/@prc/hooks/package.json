@@ -1,0 +1,11 @@
+{
+	"name": "@prc/hooks",
+	"devDependencies": {
+		"@wordpress/scripts": "^30.13.0"
+	},
+	"main": "exports.js",
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"version": "1.0.0"
+}

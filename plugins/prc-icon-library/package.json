@@ -1,0 +1,20 @@
+{
+	"name": "@prc/icon-library",
+	"description": "Font Awesome Free icon library for PRC Content Transformer Suite",
+	"license": "GPL-2.0-or-later",
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0",
+		"babel-plugin-macros": "^3.1.0"
+	},
+	"scripts": {
+		"build:sprites": "bash ./bin/build.sh"
+	},
+	"dependencies": {
+		"@fortawesome/fontawesome-svg-core": "^6.7.2",
+		"@fortawesome/free-brands-svg-icons": "^6.7.2",
+		"@fortawesome/free-regular-svg-icons": "^6.7.2",
+		"@fortawesome/free-solid-svg-icons": "^6.7.2",
+		"@fortawesome/react-fontawesome": "^0.2.2"
+	},
+	"version": "1.0.0"
+}

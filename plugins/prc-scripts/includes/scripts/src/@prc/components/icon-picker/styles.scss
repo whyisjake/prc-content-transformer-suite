@@ -1,0 +1,40 @@
+.prc-icon-picker__grid-wrapper {
+	display: flex;
+	flex-direction: column;
+}
+
+.prc-icon-picker__grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 2px;
+	max-height: 220px;
+	overflow-y: auto;
+	padding: 4px 0;
+}
+
+.prc-icon-picker__cell {
+	display: flex !important;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 6px 4px;
+	min-width: 0;
+	height: auto;
+}
+
+.prc-icon-picker__pagination {
+	margin-top: 8px;
+}
+
+.prc-icon-picker__pagination-status {
+	text-align: center;
+	line-height: 28px;
+	font-size: 11px;
+	color: #757575;
+}
+
+.prc-icon-picker__empty {
+	text-align: center;
+	color: #757575;
+	padding: 16px 0;
+}

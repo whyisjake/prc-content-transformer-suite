@@ -1,0 +1,13 @@
+{
+	"name": "@prc/vendor-d3-force",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"d3-force": "^3.0.0"
+	}
+}

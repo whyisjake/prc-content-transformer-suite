@@ -1,0 +1,25 @@
+{
+	"name": "@prc/components",
+	"devDependencies": {
+		"@wordpress/scripts": "^30.26.0",
+		"react": "^18.3.1"
+	},
+	"main": "exports.ts",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start"
+	},
+	"dependencies": {
+		"@codeamp/block-components": "^0.0.1-beta.14",
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.1",
+		"@prc/hooks": "*",
+		"@prc/icons": "*",
+		"can-use-dom": "^0.1.0",
+		"classnames": "^2.5.1",
+		"framer-motion": "^11.0.3",
+		"picturefill": "^3.0.3",
+		"prop-types": "^15.8.1"
+	},
+	"version": "1.0.0"
+}

@@ -1,0 +1,13 @@
+{
+	"name": "@prc/vendor-classnames",
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"dependencies": {
+		"classnames": "^2.5.1"
+	},
+	"version": "1.0.0"
+}

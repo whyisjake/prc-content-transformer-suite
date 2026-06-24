@@ -1,0 +1,13 @@
+{
+	"name": "@prc/vendor-jabber",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"jabber": "^1.5.3"
+	}
+}

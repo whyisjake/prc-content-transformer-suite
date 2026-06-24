@@ -1,0 +1,17 @@
+{
+	"name": "@prc/controls",
+	"devDependencies": {
+		"@wordpress/scripts": "^30.25.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start"
+	},
+	"dependencies": {
+		"@emotion/styled": "^11.14.0",
+		"@prc/icons": "*",
+		"@wordpress/icons": "^10.24.0",
+		"react-movable": "^3.0.4"
+	},
+	"version": "1.0.0"
+}

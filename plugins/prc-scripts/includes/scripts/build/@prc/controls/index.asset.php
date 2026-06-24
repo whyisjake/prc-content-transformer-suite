@@ -1,0 +1,1 @@
+<?php return array('dependencies' => array('comma-separated-values', 'prc-icons', 'react', 'react-dom', 'react-jsx-runtime', 'wp-components', 'wp-data', 'wp-i18n', 'wp-primitives'), 'version' => 'e72cd80ce8c02270a5db');

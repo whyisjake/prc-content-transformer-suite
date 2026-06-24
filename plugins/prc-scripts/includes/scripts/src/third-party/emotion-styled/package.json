@@ -1,0 +1,14 @@
+{
+	"name": "@prc/vendor-emotion-styled",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.1"
+	}
+}

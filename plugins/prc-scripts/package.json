@@ -1,0 +1,31 @@
+{
+	"name": "@prc/scripts",
+	"version": "1.0.1",
+	"description": "Shared first-party (@prc/*) and third-party JavaScript, stylesheets, and script modules for all PRC Platform plugins.",
+	"scripts": {
+		"build": "echo '@prc/scripts is a meta-package; sub-packages built via turbo dependency graph'",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"@prc/charting-utilities": "*",
+		"@prc/components": "*",
+		"@prc/controls": "*",
+		"@prc/functions": "*",
+		"@prc/hooks": "*",
+		"@prc/icons": "*",
+		"@prc/vendor-classnames": "*",
+		"@prc/vendor-comma-separated-values": "*",
+		"@prc/vendor-d3-array": "*",
+		"@prc/vendor-d3-force": "*",
+		"@prc/vendor-d3-geo-projection": "*",
+		"@prc/vendor-dompurify": "*",
+		"@prc/vendor-enquire": "*",
+		"@prc/vendor-jabber": "*",
+		"@prc/vendor-sqids": "*",
+		"@prc/vendor-emotion-styled": "*",
+		"@wordpress/icons": "^10.21.0"
+	}
+}

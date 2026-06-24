@@ -1,0 +1,13 @@
+{
+	"name": "@prc/vendor-d3-array",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"d3-array": "^3.2.0"
+	}
+}

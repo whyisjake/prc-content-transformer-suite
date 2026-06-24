@@ -1,0 +1,31 @@
+{
+	"name": "pewresearch/prc-scripts",
+	"description": "Shared first-party (@prc/*) and third-party JavaScript, stylesheets, and script modules for all PRC Platform plugins.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.2",
+		"automattic/jetpack-autoloader": "^5.0",
+		"prc/url-helper": "^1.0",
+		"prc/wp-html-processors": "^1.0"
+	},
+	"repositories": {
+		"prc-url-helper": {
+			"type": "vcs",
+			"url": "https://github.com/pewresearch/prc-url-helper"
+		},
+		"wp-html-processors": {
+			"type": "vcs",
+			"url": "https://github.com/pewresearch/wp-html-processors"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"composer/installers": true,
+			"automattic/jetpack-autoloader": true
+		},
+		"platform": {
+			"php": "8.4.0"
+		}
+	}
+}

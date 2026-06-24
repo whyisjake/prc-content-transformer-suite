@@ -1,0 +1,13 @@
+{
+	"name": "@prc/vendor-dompurify",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"dompurify": "^3.4.3"
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"name": "@prc/vendor-d3-geo-projection",
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0",
+		"d3": "^7.8.5"
+	},
+	"scripts": {
+		"build": "wp-scripts build"
+	},
+	"dependencies": {
+		"d3-geo-projection": "^4.0.0"
+	},
+	"version": "1.0.0"
+}
