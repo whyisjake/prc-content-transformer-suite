@@ -1,0 +1,130 @@
+<!-- Kitchen-sink fixture for prc-apple-news testing.
+     Covers every ANF component type the ANF_Post_Processor handles.
+     Image URLs use production-accessible Pew Research CDN paths.
+     FULL-WIDTH image: https://www.pewresearch.org/wp-content/uploads/sites/20/2025/01/ST_25.01.13_SocialMedia2025_featured.jpg
+     ANCHOR-RIGHT image must end in the literal string "200" (last 3 chars) so that
+     ANF_Post_Processor::process() routes it to anchor-layout-right-2-col via substr($url, -3).
+     The ?w=200 query param satisfies this: substr("...jpg?w=200", -3) === "200".
+-->
+
+<!-- wp:paragraph -->
+<p>Americans are navigating a rapidly changing information landscape. <strong>Eight-in-ten U.S. adults</strong> say they get news from digital devices at least sometimes, while just <em>one-in-five</em> say they prefer print sources. For more on these trends, see the <a href="https://www.pewresearch.org/journalism/">Pew Research Center journalism project</a>.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Key Findings on Media Consumption</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The shift toward digital news consumption has accelerated significantly over the past decade. Younger adults are far more likely than older adults to rely on social media for news.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Social Media as a News Source</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Among adults under 30, social media has surpassed television as the most common pathway to news. This trend holds across partisan groups, though the preferred platforms differ.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">Platform Preferences by Age</h4>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Facebook remains dominant among adults 50 and older, while YouTube and Instagram lead among younger cohorts. TikTok's share of news consumption has grown threefold since 2020.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":5} -->
+<h5 class="wp-block-heading">Trust Levels Vary by Platform</h5>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Trust in news consumed via social media is significantly lower than trust in direct news outlet sources, regardless of age group or political affiliation.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":6} -->
+<h6 class="wp-block-heading">Methodology Note</h6>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>This survey was conducted online among a nationally representative sample of 5,140 U.S. adults. The margin of error is plus or minus 1.7 percentage points.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li>Television (cable and broadcast): 49% of adults get news here regularly</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>News websites and apps: 36% cite as a primary source</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>Social media: 26% and growing year over year</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>Print newspapers: 11%, concentrated among adults 65 and older</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>Radio: 8%, primarily drive-time news programming</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>Digital-only outlets have grown their audience by 40% since 2018</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>Local TV news retains strong trust despite declining viewership</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>Podcast news consumption now rivals radio among adults under 50</li>
+<!-- /wp:list-item --><!-- wp:list-item -->
+<li>Cross-platform news consumption is the norm, not the exception</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph {"className":"is-style-has-big-number"} -->
+<p class="is-style-has-big-number">7 in 10 Americans say it is harder to be well-informed today than it was five years ago, citing information overload as the primary reason.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"is-style-has-big-number"} -->
+<p class="is-style-has-big-number">65% of U.S. adults say they have seen made-up news or information online in the past week, up from 51% in 2019.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><!-- wp:paragraph -->
+<p>The erosion of local news is not merely a media story — it is a civic story. When communities lose their watchdog, accountability suffers.</p>
+<!-- /wp:paragraph --><cite>Amy Mitchell, former Director of Journalism Research, Pew Research Center</cite></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:pullquote -->
+<figure class="wp-block-pullquote"><blockquote><p>Trust in the press has become a partisan fault line, with a 47-percentage-point gap between Republicans and Democrats — the widest in four decades of measurement.</p><cite>Pew Research Center, 2024 State of the News Media</cite></blockquote></figure>
+<!-- /wp:pullquote -->
+
+<!-- wp:group {"className":"wp-block-prc-block-callout","layout":{"type":"constrained"}} -->
+<div class="wp-block-group wp-block-prc-block-callout"><!-- wp:heading {"level":4} -->
+<h4 class="wp-block-heading">About This Report</h4>
+<!-- /wp:heading --><!-- wp:paragraph -->
+<p>This report is based on data from a survey of 5,140 U.S. adults conducted Jan. 13–19, 2025. Everyone who took part is a member of the Center's American Trends Panel, an online survey panel that is recruited through national, random sampling of residential addresses. Address-based sampling ensures nearly all U.S. adults have a chance of selection.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:image {"sizeSlug":"full","linkDestination":"none"} -->
+<figure class="wp-block-image size-full"><img src="https://www.pewresearch.org/wp-content/uploads/sites/20/2025/01/ST_25.01.13_SocialMedia2025_featured.jpg" alt="A chart showing trends in social media news consumption from 2016 to 2024 across age groups"/><figcaption class="wp-element-caption">Share of U.S. adults who regularly get news from social media, by age group. (Pew Research Center, 2025)</figcaption></figure>
+<!-- /wp:image -->
+
+<!-- wp:image {"align":"right","sizeSlug":"medium","linkDestination":"none"} -->
+<figure class="wp-block-image alignright size-medium"><img src="https://www.pewresearch.org/wp-content/uploads/sites/20/2025/01/ST_25.01.13_SocialMedia2025_featured.jpg?w=200" alt="Chart thumbnail showing platform trust ratings"/><figcaption class="wp-element-caption">Platform trust ratings, 2024</figcaption></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>The data above illustrates the divergence between platform reach and platform trust. Platforms that reach the largest audiences are not necessarily those that audiences trust most when it comes to news content.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:separator -->
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<!-- /wp:separator -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><thead><tr><th>News Source</th><th>Regular Users (%)</th><th>Trust Rating</th></tr></thead><tbody><tr><td>Local TV news</td><td>31</td><td>High</td></tr><tr><td>National TV news</td><td>27</td><td>Medium</td></tr><tr><td>News websites</td><td>36</td><td>Medium</td></tr><tr><td>Social media</td><td>26</td><td>Low</td></tr><tr><td>Print newspapers</td><td>11</td><td>High</td></tr><tr><td>Podcasts</td><td>17</td><td>Medium</td></tr></tbody></table><figcaption class="wp-element-caption">Sources and trust levels among U.S. adult news consumers, 2024. Pew Research Center.</figcaption></figure>
+<!-- /wp:table -->
+
+<!-- wp:embed {"url":"https://www.youtube.com/watch?v=UKcKTkDPLxc","type":"video","providerNameSlug":"youtube","responsive":true,"className":"wp-embed-aspect-16-9 wp-has-aspect-ratio"} -->
+<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">
+https://www.youtube.com/watch?v=UKcKTkDPLxc
+</div><figcaption class="wp-element-caption">How Americans Navigate a Fragmented News Landscape — Pew Research Center</figcaption></figure>
+<!-- /wp:embed -->

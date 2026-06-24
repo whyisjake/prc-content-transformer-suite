@@ -1,0 +1,69 @@
+.markdown-for-agents-settings {
+	&__picker-list {
+		margin: 0;
+		padding-left: 1.25rem;
+	}
+
+	&__picker-item + &__picker-item {
+		margin-top: 0.75rem;
+	}
+
+	&__picker-item-row {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	&__picker-item-title {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__picker-item-actions {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	&__resources-block {
+		border: 1px solid #dcdcde;
+		border-radius: 4px;
+		padding: 1rem;
+	}
+
+	&__resources-block-header {
+		align-items: center;
+		display: flex;
+		gap: 0.75rem;
+
+		.components-base-control {
+			flex: 1;
+			margin-bottom: 0;
+			min-width: 0;
+		}
+	}
+
+	&__resources-block-actions {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	&__categories-mode {
+		color: #646970;
+	}
+
+	&__categories-list {
+		max-height: 24rem;
+		overflow-y: auto;
+		padding-right: 0.25rem;
+	}
+
+	&__categories-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+}

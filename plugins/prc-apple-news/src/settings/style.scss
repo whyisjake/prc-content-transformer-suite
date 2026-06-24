@@ -1,0 +1,48 @@
+/**
+ * Apple News Settings — admin page styles.
+ */
+
+.prc-apple-news-settings {
+	max-width: 640px;
+	margin-top: 24px;
+
+	&__header {
+		margin-bottom: 24px;
+	}
+
+	&__loading {
+		display: flex;
+		justify-content: center;
+		padding: 48px 0;
+	}
+
+	&__form {
+		background: #fff;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		padding: 24px;
+	}
+
+	&__notice,
+	&__test-notice {
+		margin-bottom: 0;
+	}
+
+	&__secret-stored {
+		position: relative;
+	}
+
+	&__change-secret {
+		margin-top: 4px;
+	}
+
+	&__test-row {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	&__actions {
+		margin-top: 8px;
+	}
+}

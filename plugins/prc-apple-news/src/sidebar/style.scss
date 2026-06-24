@@ -1,0 +1,127 @@
+.prc-apple-news-panel {
+	padding: 0 16px 8px;
+
+	&__pending {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+	}
+
+	&__article-id {
+		margin: 0;
+		font-size: 12px;
+		word-break: break-all;
+
+		code {
+			font-size: 11px;
+		}
+	}
+
+	.components-notice {
+		margin: 0 0 8px;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ANF in-editor preview
+// ---------------------------------------------------------------------------
+
+.prc-anf-preview-modal {
+	.components-modal__content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 100%;
+		padding: 24px;
+		overflow: auto;
+	}
+
+	&__loading {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		padding: 48px;
+	}
+
+	&__validation-list {
+		margin: 8px 0 0;
+		padding-left: 20px;
+		font-size: 12px;
+	}
+}
+
+.prc-anf-preview {
+	width: 430px;
+	margin: 0 auto;
+	zoom: min(1.4, calc((100vh - 160px) / 800));
+
+	&__canvas {
+		overflow: hidden;
+	}
+
+	&__components {
+		width: 100%;
+	}
+
+	&__component {
+		box-sizing: border-box;
+
+		&--nested {
+			margin-left: 0;
+			width: 100%;
+		}
+	}
+
+	&__text {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+
+		p {
+			margin: var(--anf-paragraph-spacing-before, 0) 0
+				var(--anf-paragraph-spacing-after, 0);
+		}
+
+		a {
+			color: var(--anf-link-color, #346ead);
+			text-decoration: var(--anf-link-underline, underline);
+		}
+	}
+
+	&__text--byline {
+		letter-spacing: 0.05em;
+	}
+
+	&__photo {
+		max-width: 100%;
+	}
+
+	&__link-button {
+		border-radius: 0;
+	}
+
+	&__pullquote {
+		margin: 0;
+		padding: 0;
+		border: none;
+	}
+
+	&__embed {
+		width: 100%;
+	}
+
+	&__placeholder {
+		padding: 12px;
+		background: #f0f0f0;
+		border: 1px dashed #ccc;
+		color: #666;
+		font-size: 12px;
+		text-align: center;
+	}
+
+	&__container {
+		width: 100%;
+	}
+}

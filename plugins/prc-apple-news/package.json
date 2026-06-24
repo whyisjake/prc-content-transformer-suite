@@ -1,0 +1,21 @@
+{
+	"name": "@prc/apple-news",
+	"version": "1.0.0",
+	"description": "Publishes PRC content to Apple News via the Apple News API.",
+	"scripts": {
+		"build": "npm run build:settings && npm run build:sidebar",
+		"build:settings": "wp-scripts build --source-path=./src/settings --output-path=./build/settings",
+		"build:sidebar": "wp-scripts build --source-path=./src/sidebar --output-path=./build/sidebar",
+		"start": "npm run start:settings & npm run start:sidebar",
+		"start:settings": "wp-scripts start --source-path=./src/settings --output-path=./build/settings",
+		"start:sidebar": "wp-scripts start --source-path=./src/sidebar --output-path=./build/sidebar",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	},
+	"dependencies": {
+		"@prc/components": "*",
+		"@wordpress/icons": "^10.21.0"
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"name": "pewresearch/prc-apple-news",
+	"type": "wordpress-plugin",
+	"description": "Native Apple News delivery plugin for PRC Platform.",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.2",
+		"automattic/jetpack-autoloader": "^5.0",
+		"justinrainbow/json-schema": "^5.2"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9.6"
+	},
+	"config": {
+		"allow-plugins": {
+			"composer/installers": true,
+			"automattic/jetpack-autoloader": true
+		},
+		"platform": {
+			"php": "8.4.0"
+		}
+	}
+}

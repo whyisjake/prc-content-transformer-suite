@@ -1,0 +1,16 @@
+{
+  "identifier": "post-prc-apple-news-test",
+  "language": "en",
+  "title": "Test Article",
+  "layout": {
+    "columns": 15,
+    "width": 1024
+  },
+  "components": [
+    {
+      "role": "body",
+      "text": "Hello"
+    }
+  ],
+  "componentTextStyles": {}
+}

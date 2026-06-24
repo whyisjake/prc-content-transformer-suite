@@ -1,0 +1,59 @@
+{
+  "version": "1.11",
+  "identifier": "post-prc-apple-news-test",
+  "language": "en",
+  "title": "Test Article",
+  "layout": {
+    "columns": 15,
+    "width": 1024,
+    "margin": 100,
+    "gutter": 20
+  },
+  "documentStyle": {
+    "backgroundColor": "#FFFFFF"
+  },
+  "components": [
+    {
+      "role": "title",
+      "text": "Test Article Title",
+      "layout": "title-layout",
+      "textStyle": "default-title"
+    },
+    {
+      "role": "body",
+      "text": "<p>This is a body paragraph with <strong>bold</strong> and <em>italic</em> text.</p>",
+      "format": "html",
+      "textStyle": "default-body",
+      "layout": "body-layout"
+    }
+  ],
+  "componentTextStyles": {
+    "default-title": {
+      "fontName": "Georgia-Bold",
+      "fontSize": 50,
+      "lineHeight": 53,
+      "textColor": "#2a2a2a"
+    },
+    "default-body": {
+      "fontName": "Georgia",
+      "fontSize": 18,
+      "lineHeight": 32,
+      "textColor": "#2a2a2a"
+    }
+  },
+  "componentLayouts": {
+    "title-layout": {
+      "columnStart": 0,
+      "columnSpan": 15,
+      "margin": { "top": 0, "bottom": 8 }
+    },
+    "body-layout": {
+      "columnStart": 0,
+      "columnSpan": 15,
+      "margin": { "top": 12, "bottom": 12 }
+    }
+  },
+  "metadata": {
+    "excerpt": "A test article for PHPUnit validation."
+  }
+}
