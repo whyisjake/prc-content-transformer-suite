@@ -2,7 +2,7 @@
 
 Open-source WordPress plugins for AI-powered content transformation, Apple News publishing, and email delivery — extracted from the [Pew Research Center publishing platform](https://github.com/pewresearch/prc-platform).
 
-[![Try in Playground](https://img.shields.io/badge/Try%20in-Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/whyisjake/prc-content-transformer-suite/main/blueprint.json)
+[![Try in Playground](https://img.shields.io/badge/Try%20in-Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/whyisjake/prc-content-transformer-suite/refs/heads/main/blueprint.json)
 
 ## Try it in Playground
 
