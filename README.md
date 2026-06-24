@@ -2,6 +2,23 @@
 
 Open-source WordPress plugins for AI-powered content transformation, Apple News publishing, and email delivery — extracted from the [Pew Research Center publishing platform](https://github.com/pewresearch/prc-platform).
 
+[![Try in Playground](https://img.shields.io/badge/Try%20in-Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/whyisjake/prc-content-transformer-suite/main/blueprint.json)
+
+## Try it in Playground
+
+Click the badge above to open a live WordPress demo in your browser — no local setup required.
+
+The demo activates **prc-scripts**, **prc-icon-library**, **prc-markdown-for-agents**, and **markdown-comment-block**, then seeds a sample article and lands directly on its `/markdown` endpoint so you can see the output immediately.
+
+**Demo flow:**
+
+1. Playground loads and lands on `/demo-article/markdown` — a `text/markdown` response with YAML front matter
+2. Navigate to `/demo-article.md` — same content via the `.md` URL convention
+3. Navigate to `/llms.txt` — the site-level AI index
+4. Open `/wp-admin/` → New Post → insert a **Markdown Comment** block from the block inserter
+
+> **Note:** prc-apple-news, prc-email-builder, and prc-content-transformer are not included in the demo because they require API credentials (Apple News, Mailchimp) and PHP vendor dependencies. See [Installation](#installation) to set up the full suite locally.
+
 ## Plugins
 
 | Plugin | Description |
