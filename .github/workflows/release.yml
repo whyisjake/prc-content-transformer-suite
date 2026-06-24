@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    name: Build and package plugins
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build JS/CSS assets
+        run: npm run build
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Install PHP dependencies (prc-apple-news)
+        run: |
+          cd plugins/prc-apple-news
+          composer install --no-dev --optimize-autoloader --classmap-authoritative
+
+      - name: Install PHP dependencies (prc-content-transformer)
+        run: |
+          cd plugins/prc-content-transformer
+          composer install --no-dev --optimize-autoloader --classmap-authoritative
+
+      - name: Install PHP dependencies (prc-email-builder)
+        run: |
+          cd plugins/prc-email-builder
+          composer install --no-dev --optimize-autoloader --classmap-authoritative
+
+      - name: Install PHP dependencies (prc-markdown-for-agents)
+        run: |
+          cd plugins/prc-markdown-for-agents
+          composer install --no-dev --optimize-autoloader --classmap-authoritative
+
+      - name: Sanitize icon library (verify no Pro sprites)
+        run: bash plugins/prc-icon-library/bin/sanitize-public-release.sh
+
+      - name: Create dist directory
+        run: mkdir -p dist
+
+      - name: Package prc-scripts
+        run: |
+          zip -r dist/prc-scripts.zip plugins/prc-scripts \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-icon-library
+        run: |
+          zip -r dist/prc-icon-library.zip plugins/prc-icon-library \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-post-publish-pipeline
+        run: |
+          zip -r dist/prc-post-publish-pipeline.zip plugins/prc-post-publish-pipeline \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-markdown-for-agents
+        run: |
+          zip -r dist/prc-markdown-for-agents.zip plugins/prc-markdown-for-agents \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-content-transformer
+        run: |
+          zip -r dist/prc-content-transformer.zip plugins/prc-content-transformer \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-apple-news
+        run: |
+          zip -r dist/prc-apple-news.zip plugins/prc-apple-news \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-email-builder
+        run: |
+          zip -r dist/prc-email-builder.zip plugins/prc-email-builder \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package markdown-comment-block
+        run: |
+          zip -r dist/markdown-comment-block.zip plugins/markdown-comment-block \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

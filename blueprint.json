@@ -1,0 +1,75 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "PRC Content Transformer Suite Demo",
+		"description": "One-click demo of prc-markdown-for-agents: serve WordPress posts as Markdown via .md and /markdown URLs",
+		"author": "pewresearch"
+	},
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": true
+	},
+	"constants": {
+		"WP_PLAYGROUND": true,
+		"WP_DEBUG": true,
+		"SCRIPT_DEBUG": true
+	},
+	"siteOptions": {
+		"blogname": "PRC Content Transformer Suite Demo"
+	},
+	"login": true,
+	"landingPage": "/demo-article/markdown",
+	"steps": [
+		{
+			"step": "unzip",
+			"zipFile": {
+				"resource": "url",
+				"url": "https://github.com/whyisjake/prc-content-transformer-suite/archive/refs/heads/main.zip"
+			},
+			"extractToPath": "/tmp/suite"
+		},
+		{
+			"step": "mv",
+			"fromPath": "/tmp/suite/prc-content-transformer-suite-main/plugins/prc-scripts",
+			"toPath": "/wordpress/wp-content/plugins/prc-scripts"
+		},
+		{
+			"step": "mv",
+			"fromPath": "/tmp/suite/prc-content-transformer-suite-main/plugins/prc-icon-library",
+			"toPath": "/wordpress/wp-content/plugins/prc-icon-library"
+		},
+		{
+			"step": "mv",
+			"fromPath": "/tmp/suite/prc-content-transformer-suite-main/plugins/prc-markdown-for-agents",
+			"toPath": "/wordpress/wp-content/plugins/prc-markdown-for-agents"
+		},
+		{
+			"step": "mv",
+			"fromPath": "/tmp/suite/prc-content-transformer-suite-main/plugins/markdown-comment-block",
+			"toPath": "/wordpress/wp-content/plugins/markdown-comment-block"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp plugin activate prc-scripts"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp plugin activate prc-icon-library prc-markdown-for-agents markdown-comment-block"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp rewrite structure '/%postname%/'"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp rewrite flush"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp post create --post_type=post --post_name=demo-article --post_title='Demo Article: AI Markdown Endpoint' --post_status=publish --post_content='<!-- wp:paragraph --><p>This article is served as Markdown via the <code>/markdown</code> and <code>.md</code> URL endpoints provided by the <strong>prc-markdown-for-agents</strong> plugin.</p><!-- /wp:paragraph --><!-- wp:heading --><h2 class=\"wp-block-heading\">How it works</h2><!-- /wp:heading --><!-- wp:paragraph --><p>Append <code>/markdown</code> to any post URL to receive the full article content as clean Markdown — including YAML front matter with metadata. AI agents and crawlers can consume this directly without parsing HTML.</p><!-- /wp:paragraph --><!-- wp:list --><ul class=\"wp-block-list\"><!-- wp:list-item --><li>Visit <code>/demo-article/markdown</code> for Markdown output</li><!-- /wp:list-item --><!-- wp:list-item --><li>Visit <code>/demo-article.md</code> for the same output</li><!-- /wp:list-item --><!-- wp:list-item --><li>Visit <code>/llms.txt</code> for the site-level AI index</li><!-- /wp:list-item --></ul><!-- /wp:list --><!-- wp:paragraph --><p>The response includes a <code>Content-Type: text/markdown</code> header and a YAML front matter block with the post title, author, date, and canonical URL.</p><!-- /wp:paragraph -->'"
+		}
+	]
+}
