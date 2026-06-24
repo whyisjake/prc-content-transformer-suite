@@ -1,0 +1,21 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"globalDependencies": [".nvmrc"],
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": [
+				"src/**",
+				"includes/**/src/**",
+				"bin/**",
+				"block.json",
+				"webpack.config.js",
+				"webpack.*.config.js",
+				"tsconfig.json",
+				"tsconfig.*.json",
+				"package.json"
+			],
+			"outputs": ["**/build/**"]
+		}
+	}
+}

@@ -1,0 +1,58 @@
+{
+	"name": "pewresearch/prc-content-transformer-suite",
+	"description": "PRC Content Transformer Suite — WordPress plugins for content transformation, AI processing, Apple News, and email delivery",
+	"type": "project",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.2",
+		"automattic/jetpack-autoloader": "^3.0",
+		"woocommerce/action-scheduler": "^3.8"
+	},
+	"repositories": [
+		{
+			"type": "path",
+			"url": "plugins/prc-scripts",
+			"options": { "symlink": false }
+		},
+		{
+			"type": "path",
+			"url": "plugins/prc-icon-library",
+			"options": { "symlink": false }
+		},
+		{
+			"type": "path",
+			"url": "plugins/prc-post-publish-pipeline",
+			"options": { "symlink": false }
+		},
+		{
+			"type": "path",
+			"url": "plugins/prc-markdown-for-agents",
+			"options": { "symlink": false }
+		},
+		{
+			"type": "path",
+			"url": "plugins/prc-content-transformer",
+			"options": { "symlink": false }
+		},
+		{
+			"type": "path",
+			"url": "plugins/prc-apple-news",
+			"options": { "symlink": false }
+		},
+		{
+			"type": "path",
+			"url": "plugins/prc-email-builder",
+			"options": { "symlink": false }
+		}
+	],
+	"config": {
+		"optimize-autoloader": true,
+		"preferred-install": "dist",
+		"sort-packages": true
+	},
+	"extra": {
+		"installer-paths": {
+			"plugins/{$name}/vendor": ["type:wordpress-plugin"]
+		}
+	}
+}

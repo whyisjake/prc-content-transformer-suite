@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts (committed for distribution; gitignore if building from source)
+# Uncomment the next line if you want to gitignore build output:
+# **/build/
+
+# WordPress local environment
+.wp-env/
+
+# Turbo cache
+.turbo/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env files
+.env
+.env.local
+vip-env-vars.local.php
+
+# FontAwesome token — must NEVER be committed
+.npmrc

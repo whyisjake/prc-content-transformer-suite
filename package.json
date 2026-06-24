@@ -1,0 +1,29 @@
+{
+	"name": "@prc/content-transformer-suite",
+	"description": "PRC Content Transformer Suite — open-source WordPress plugins for content transformation, AI processing, Apple News, and email delivery",
+	"version": "1.0.0",
+	"license": "GPL-2.0-or-later",
+	"private": true,
+	"packageManager": "npm@10.9.2",
+	"engines": {
+		"node": ">=22.16.0",
+		"npm": ">=10.9.2"
+	},
+	"workspaces": [
+		"plugins/prc-scripts",
+		"plugins/prc-icon-library",
+		"plugins/prc-post-publish-pipeline",
+		"plugins/prc-markdown-for-agents",
+		"plugins/prc-content-transformer",
+		"plugins/prc-apple-news",
+		"plugins/prc-email-builder",
+		"plugins/markdown-comment-block"
+	],
+	"scripts": {
+		"build": "turbo run build",
+		"dev": "turbo run build --watch"
+	},
+	"devDependencies": {
+		"turbo": "^2.0.0"
+	}
+}

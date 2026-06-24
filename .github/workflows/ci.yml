@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, trunk]
+  pull_request:
+    branches: [main, trunk]
+
+jobs:
+  build:
+    name: Build plugins
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check for credential residue
+        run: |
+          if grep -r --include="*.json" --include="*.js" --include="*.ts" --include="*.php" \
+               "PRC_PLATFORM_FONTAWESOME_TOKEN\|fontawesome-pro\|@fortawesome/pro" .; then
+            echo "ERROR: FontAwesome Pro token or Pro package reference found — remove before shipping."
+            exit 1
+          fi
+          echo "Credential check passed."

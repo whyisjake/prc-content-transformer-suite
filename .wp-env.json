@@ -1,0 +1,19 @@
+{
+	"core": null,
+	"phpVersion": "8.2",
+	"plugins": [
+		"./plugins/prc-scripts",
+		"./plugins/prc-icon-library",
+		"./plugins/prc-post-publish-pipeline",
+		"./plugins/prc-markdown-for-agents",
+		"./plugins/prc-content-transformer",
+		"./plugins/prc-apple-news",
+		"./plugins/prc-email-builder",
+		"./plugins/markdown-comment-block"
+	],
+	"config": {
+		"WP_DEBUG": true,
+		"WP_DEBUG_LOG": true,
+		"SCRIPT_DEBUG": true
+	}
+}
