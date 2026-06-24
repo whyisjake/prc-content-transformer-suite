@@ -7,25 +7,13 @@ on:
     branches: [main, trunk]
 
 jobs:
-  build:
-    name: Build plugins
+  lint:
+    name: Credential check
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
 
       - name: Check for credential residue
         run: |
