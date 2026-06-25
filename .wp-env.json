@@ -2,6 +2,7 @@
 	"core": null,
 	"phpVersion": "8.2",
 	"plugins": [
+		"https://downloads.wordpress.org/plugin/ai-provider-for-anthropic.latest-stable.zip",
 		"./plugins/prc-scripts",
 		"./plugins/prc-icon-library",
 		"./plugins/prc-post-publish-pipeline",

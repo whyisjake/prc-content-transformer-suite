@@ -98,7 +98,7 @@ class Bootstrap {
 		new ANF\ANF_Block_Integration( $this->loader );
 
 		// WP-CLI commands.
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'PRC\Platform\Apple_News\CLI\CLI_Command' ) ) {
 			CLI\CLI_Command::register();
 		}
 	}

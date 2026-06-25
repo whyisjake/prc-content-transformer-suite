@@ -103,7 +103,7 @@ class Bootstrap {
 		new API\REST_Controller( $this->loader );
 
 		// WP-CLI commands.
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'PRC\Platform\Content_Transformer\CLI\CLI_Command' ) ) {
 			CLI\CLI_Command::register();
 		}
 
