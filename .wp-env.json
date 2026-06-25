@@ -8,12 +8,15 @@
 		"./plugins/prc-post-publish-pipeline",
 		"./plugins/prc-markdown-for-agents",
 		"./plugins/prc-content-transformer",
+		"./plugins/prc-pdf-extraction",
 		"./plugins/prc-apple-news",
 		"./plugins/prc-email-builder"
 	],
 	"config": {
 		"WP_DEBUG": true,
 		"WP_DEBUG_LOG": true,
-		"SCRIPT_DEBUG": true
+		"SCRIPT_DEBUG": true,
+		"PRC_PLATFORM_ANTHROPIC_API_KEY": "",
+		"ANTHROPIC_API_KEY": ""
 	}
 }

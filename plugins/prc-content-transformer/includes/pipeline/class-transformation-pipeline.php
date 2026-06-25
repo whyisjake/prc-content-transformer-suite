@@ -569,10 +569,26 @@ class Transformation_Pipeline {
 	 * @return array{text:string,error:string}
 	 */
 	private static function fallback_generate_via_anthropic( string $system_instruction, string $user_prompt, string $error_message ): array {
-		if ( ! defined( 'ANTHROPIC_API_KEY' ) || ! is_string( ANTHROPIC_API_KEY ) || '' === trim( ANTHROPIC_API_KEY ) ) {
+		$api_key = '';
+
+		if ( defined( 'ANTHROPIC_API_KEY' ) && is_string( ANTHROPIC_API_KEY ) && '' !== trim( ANTHROPIC_API_KEY ) ) {
+			$api_key = trim( ANTHROPIC_API_KEY );
+		} elseif ( defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) && is_string( PRC_PLATFORM_ANTHROPIC_API_KEY ) && '' !== trim( PRC_PLATFORM_ANTHROPIC_API_KEY ) ) {
+			$api_key = trim( PRC_PLATFORM_ANTHROPIC_API_KEY );
+		} else {
+			foreach ( array( 'ais_anthropic_api_key', 'connectors_ai_anthropic_api_key' ) as $option_name ) {
+				$candidate = get_option( $option_name, '' );
+				if ( is_string( $candidate ) && '' !== trim( $candidate ) && ! str_starts_with( $candidate, 'enc::' ) ) {
+					$api_key = trim( $candidate );
+					break;
+				}
+			}
+		}
+
+		if ( '' === $api_key ) {
 			return array(
 				'text'  => '',
-				'error' => 'ANTHROPIC_API_KEY missing',
+				'error' => 'No Anthropic API key found (checked ANTHROPIC_API_KEY, PRC_PLATFORM_ANTHROPIC_API_KEY, and connector options)',
 			);
 		}
 
@@ -610,7 +626,7 @@ class Transformation_Pipeline {
 					'timeout' => 120,
 					'headers' => array(
 						'Content-Type'      => 'application/json',
-						'x-api-key'         => ANTHROPIC_API_KEY,
+						'x-api-key'         => $api_key,
 						'anthropic-version' => '2023-06-01',
 					),
 					'body'    => wp_json_encode( $request_body ),

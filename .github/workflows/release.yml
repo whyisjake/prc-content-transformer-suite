@@ -54,6 +54,11 @@ jobs:
           cd plugins/prc-markdown-for-agents
           composer install --no-dev --optimize-autoloader --classmap-authoritative
 
+      - name: Install PHP dependencies (prc-pdf-extraction)
+        run: |
+          cd plugins/prc-pdf-extraction
+          composer install --no-dev --optimize-autoloader --classmap-authoritative
+
       - name: Sanitize icon library (verify no Pro sprites)
         run: bash plugins/prc-icon-library/bin/sanitize-public-release.sh
 
@@ -78,6 +83,11 @@ jobs:
       - name: Package prc-markdown-for-agents
         run: |
           zip -r dist/prc-markdown-for-agents.zip plugins/prc-markdown-for-agents \
+            --exclude "*/node_modules/*" --exclude "*/.git/*"
+
+      - name: Package prc-pdf-extraction
+        run: |
+          zip -r dist/prc-pdf-extraction.zip plugins/prc-pdf-extraction \
             --exclude "*/node_modules/*" --exclude "*/.git/*"
 
       - name: Package prc-content-transformer

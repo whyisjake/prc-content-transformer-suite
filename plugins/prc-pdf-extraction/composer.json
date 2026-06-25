@@ -1,0 +1,36 @@
+{
+	"name": "prc/pdf-extraction",
+	"description": "Extract text from PDF documents using OCR services, making data accessible to LLMs",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.2",
+		"automattic/jetpack-autoloader": "^5.0"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^1.0",
+		"wp-phpunit/wp-phpunit": "^6.1"
+	},
+	"scripts": {
+		"test": [
+			"phpunit"
+		],
+		"test-ms": [
+			"WP_MULTISITE=1 phpunit"
+		],
+		"test-vip": [
+			"phpunit --configuration phpunit-vip.xml.dist"
+		]
+	},
+	"config": {
+		"allow-plugins": {
+			"composer/installers": true,
+			"dealerdirect/phpcodesniffer-composer-installer": true,
+			"automattic/jetpack-autoloader": true
+		},
+		"platform": {
+			"php": "8.4.0"
+		}
+	}
+}

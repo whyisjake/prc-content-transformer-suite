@@ -27,3 +27,6 @@ vip-env-vars.local.php
 
 # FontAwesome token — must NEVER be committed
 .npmrc
+
+# Planning/scratch docs
+docs/
