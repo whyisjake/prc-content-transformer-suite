@@ -9,8 +9,7 @@
 		"./plugins/prc-markdown-for-agents",
 		"./plugins/prc-content-transformer",
 		"./plugins/prc-apple-news",
-		"./plugins/prc-email-builder",
-		"./plugins/markdown-comment-block"
+		"./plugins/prc-email-builder"
 	],
 	"config": {
 		"WP_DEBUG": true,
