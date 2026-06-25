@@ -421,7 +421,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 
 		$request_body = array(
 			'model'      => $this->get_model(),
-			'max_tokens' => apply_filters( 'prc_pdf_extraction_claude_max_tokens', 16384 ),
+			'max_tokens' => apply_filters( 'prc_pdf_extraction_claude_max_tokens', 64000 ),
 			'messages'   => array(
 				array(
 					'role'    => 'user',
@@ -515,7 +515,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 	public function call_api_with_file_id( string $prompt, string $file_id ): array {
 		$request_body = array(
 			'model'      => $this->get_model(),
-			'max_tokens' => apply_filters( 'prc_pdf_extraction_claude_max_tokens', 16384 ),
+			'max_tokens' => apply_filters( 'prc_pdf_extraction_claude_max_tokens', 64000 ),
 			'messages'   => array(
 				array(
 					'role'    => 'user',
