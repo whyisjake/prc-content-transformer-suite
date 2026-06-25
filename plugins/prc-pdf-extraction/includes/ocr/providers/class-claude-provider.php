@@ -88,8 +88,26 @@ class Claude_Provider implements OCR_Provider_Interface {
 	 * @param string|null $model Optional model name override (e.g. 'claude-opus-4-6').
 	 */
 	public function __construct( ?string $model = null ) {
-		$this->api_key = defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) ? PRC_PLATFORM_ANTHROPIC_API_KEY : '';
+		$this->api_key = $this->resolve_api_key();
 		$this->model   = $model ?? self::DEFAULT_MODEL;
+	}
+
+	/**
+	 * Resolve the Anthropic API key from constants or connector options.
+	 */
+	private function resolve_api_key(): string {
+		if ( defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) && '' !== trim( PRC_PLATFORM_ANTHROPIC_API_KEY ) ) {
+			return PRC_PLATFORM_ANTHROPIC_API_KEY;
+		}
+
+		foreach ( array( 'ais_anthropic_api_key', 'connectors_ai_anthropic_api_key' ) as $option ) {
+			$value = get_option( $option, '' );
+			if ( is_string( $value ) && '' !== trim( $value ) && ! str_starts_with( $value, 'enc::' ) ) {
+				return trim( $value );
+			}
+		}
+
+		return '';
 	}
 
 	/**
@@ -425,30 +443,43 @@ class Claude_Provider implements OCR_Provider_Interface {
 			),
 		);
 
-		$timeout = (int) apply_filters( 'prc_pdf_extraction_ocr_timeout', 120 );
+		$timeout      = (int) apply_filters( 'prc_pdf_extraction_ocr_timeout', 600 );
+		$request_json = wp_json_encode( $request_body );
 
-		$response = wp_remote_post(
-			self::API_ENDPOINT,
-			array(
-				'headers' => array(
-					'Content-Type'      => 'application/json',
-					'x-api-key'         => $this->api_key,
-					'anthropic-version' => self::ANTHROPIC_VERSION,
-				),
-				'body'    => wp_json_encode( $request_body ),
-				'timeout' => $timeout,
-			)
+		$curl_headers = array(
+			'Content-Type: application/json',
+			'x-api-key: ' . $this->api_key,
+			'anthropic-version: ' . self::ANTHROPIC_VERSION,
 		);
-
-		if ( is_wp_error( $response ) ) {
-			throw new Extraction_Failed_Exception(
-				'Claude API request failed: ' . $response->get_error_message()
-			);
+		if ( 'document' === $content_type ) {
+			$curl_headers[] = 'anthropic-beta: pdfs-2024-09-25';
 		}
 
-		$status_code   = wp_remote_retrieve_response_code( $response );
-		$response_body = wp_remote_retrieve_body( $response );
-		$data          = json_decode( $response_body, true );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_init
+		$ch = curl_init( self::API_ENDPOINT );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt_array
+		curl_setopt_array(
+			$ch,
+			array(
+				CURLOPT_POST           => true,
+				CURLOPT_POSTFIELDS     => $request_json,
+				CURLOPT_HTTPHEADER     => $curl_headers,
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_TIMEOUT        => $timeout,
+			)
+		);
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_exec
+		$response_body = curl_exec( $ch );
+		$status_code   = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo
+		$curl_error    = curl_error( $ch ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_error
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_close
+		curl_close( $ch );
+
+		if ( false === $response_body || ! empty( $curl_error ) ) {
+			throw new Extraction_Failed_Exception( 'Claude API request failed: ' . $curl_error );
+		}
+
+		$data = json_decode( $response_body, true );
 
 		if ( 401 === $status_code || 403 === $status_code ) {
 			throw new Authentication_Exception( 'Invalid Claude API key' );
@@ -505,7 +536,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 			),
 		);
 
-		$timeout = (int) apply_filters( 'prc_pdf_extraction_ocr_timeout', 120 );
+		$timeout = (int) apply_filters( 'prc_pdf_extraction_ocr_timeout', 600 );
 
 		$response = wp_remote_post(
 			self::API_ENDPOINT,

@@ -47,7 +47,10 @@ class OCR_Orchestrator {
 		$providers = array();
 
 		// Register Claude provider if configured (primary: native PDF document understanding, priority 4)
-		if ( defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) && PRC_PLATFORM_ANTHROPIC_API_KEY ) {
+		$anthropic_key = ( defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) && PRC_PLATFORM_ANTHROPIC_API_KEY )
+			? PRC_PLATFORM_ANTHROPIC_API_KEY
+			: $this->get_option_key( array( 'ais_anthropic_api_key', 'connectors_ai_anthropic_api_key' ) );
+		if ( '' !== $anthropic_key ) {
 			require_once __DIR__ . '/../providers/class-claude-provider.php';
 			$providers[] = new \PRC\Platform\PDF_Extraction\OCR\Providers\Claude_Provider();
 		}
@@ -73,6 +76,22 @@ class OCR_Orchestrator {
 		);
 
 		$this->providers = $providers;
+	}
+
+	/**
+	 * Read the first non-empty, non-encrypted value from a list of option names.
+	 *
+	 * @param string[] $option_names Option names to check in order.
+	 * @return string
+	 */
+	private function get_option_key( array $option_names ): string {
+		foreach ( $option_names as $name ) {
+			$value = get_option( $name, '' );
+			if ( is_string( $value ) && '' !== trim( $value ) && ! str_starts_with( $value, 'enc::' ) ) {
+				return trim( $value );
+			}
+		}
+		return '';
 	}
 
 	/**

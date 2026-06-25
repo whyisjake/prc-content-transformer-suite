@@ -145,10 +145,11 @@ class WP_CLI_Commands {
 				'name'      => $provider->get_name(),
 				'priority'  => $provider->get_priority(),
 				'available' => $provider->is_available() ? 'Yes' : 'No',
+				'model'     => method_exists( $provider, 'get_model' ) ? $provider->get_model() : '—',
 			);
 		}
 
-		\WP_CLI\Utils\format_items( 'table', $rows, array( 'name', 'priority', 'available' ) );
+		\WP_CLI\Utils\format_items( 'table', $rows, array( 'name', 'priority', 'available', 'model' ) );
 	}
 
 	/**
