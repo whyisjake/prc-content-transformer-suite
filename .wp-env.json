@@ -2,14 +2,14 @@
 	"core": null,
 	"phpVersion": "8.2",
 	"plugins": [
+		"https://downloads.wordpress.org/plugin/ai-provider-for-anthropic.latest-stable.zip",
 		"./plugins/prc-scripts",
 		"./plugins/prc-icon-library",
 		"./plugins/prc-post-publish-pipeline",
 		"./plugins/prc-markdown-for-agents",
 		"./plugins/prc-content-transformer",
 		"./plugins/prc-apple-news",
-		"./plugins/prc-email-builder",
-		"./plugins/markdown-comment-block"
+		"./plugins/prc-email-builder"
 	],
 	"config": {
 		"WP_DEBUG": true,

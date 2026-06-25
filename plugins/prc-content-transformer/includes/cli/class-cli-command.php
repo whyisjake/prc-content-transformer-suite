@@ -12,8 +12,11 @@ use PRC\Platform\Content_Transformer\Cache\Transformation_Cache;
 use PRC\Platform\Content_Transformer\Providers\Provider_Registry;
 use WP_CLI;
 
-if ( ! class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
+if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	return;
+}
+if ( ! class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
+	class_alias( 'WP_CLI_Command', 'WPCOM_VIP_CLI_Command' );
 }
 
 /**
