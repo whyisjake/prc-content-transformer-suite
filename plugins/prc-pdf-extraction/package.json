@@ -1,0 +1,22 @@
+{
+	"name": "@prc/pdf-extraction",
+	"version": "1.0.0",
+	"description": "Extract text from PDF documents using OCR services",
+	"scripts": {
+		"test:php": "vip dev-env shell --slug=prc-platform -- bash -c 'cd /wp/wp-content/plugins/prc-pdf-extraction && composer test-vip'",
+		"test:php:verbose": "vip dev-env shell --slug=prc-platform -- bash -c 'cd /wp/wp-content/plugins/prc-pdf-extraction && vendor/bin/phpunit --configuration phpunit-vip.xml.dist --verbose'",
+		"test:php:local": "composer test"
+	},
+	"keywords": [
+		"wordpress",
+		"ocr",
+		"pdf",
+		"text-extraction",
+		"llm"
+	],
+	"author": "Pew Research Center",
+	"license": "GPL-2.0-or-later",
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	}
+}

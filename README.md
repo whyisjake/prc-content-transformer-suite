@@ -27,6 +27,7 @@ The demo activates **prc-scripts**, **prc-icon-library**, **prc-markdown-for-age
 | `prc-icon-library` | Font Awesome Free SVG sprite library (solid, regular, brands) |
 | `prc-post-publish-pipeline` | Post-publish action pipeline (triggers downstream transformations) |
 | `prc-markdown-for-agents` | Serve articles as Markdown via `.md` / `/markdown` URLs for AI agents and crawlers |
+| `prc-pdf-extraction` | Extract text from PDF attachments via OCR (Gemini, Claude, WP AI) and expose via the markdown endpoint |
 | `prc-content-transformer` | AI-powered middleware that converts WordPress content to Apple News Format, email HTML, or plain text |
 | `prc-apple-news` | Publishes content to Apple News via the Apple News API |
 | `prc-email-builder` | Newsletter authoring and Mailchimp delivery (CPT, patterns, send UI) |
