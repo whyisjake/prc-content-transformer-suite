@@ -17,6 +17,7 @@
 		"WP_DEBUG": true,
 		"WP_DEBUG_LOG": true,
 		"SCRIPT_DEBUG": true,
-		"PRC_PLATFORM_ANTHROPIC_API_KEY": ""
+		"PRC_PLATFORM_ANTHROPIC_API_KEY": "",
+		"ANTHROPIC_API_KEY": ""
 	}
 }
