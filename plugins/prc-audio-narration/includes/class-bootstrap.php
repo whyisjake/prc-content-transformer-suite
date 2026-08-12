@@ -48,6 +48,7 @@ class Bootstrap {
 	 */
 	private function load_dependencies() {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-loader.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-settings.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-script-provider-registrar.php';
 
 		// TTS infrastructure.
@@ -65,6 +66,7 @@ class Bootstrap {
 
 		// TTS providers and orchestration.
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/providers/interface-tts-provider.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/providers/class-elevenlabs-provider.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/application/class-tts-orchestrator.php';
 
 		$this->loader = new Loader();
@@ -78,7 +80,29 @@ class Bootstrap {
 	 * stays a manifest rather than a hook registry.
 	 */
 	private function register_modules() {
+		new Settings( $this->loader );
 		new Script_Provider_Registrar( $this->loader );
+	}
+
+	/**
+	 * Build a TTS orchestrator with the registered speech providers.
+	 *
+	 * Providers are collected through a filter so a site can add or replace
+	 * one without editing this plugin.
+	 *
+	 * @return TTS\Application\TTS_Orchestrator
+	 */
+	public static function tts_orchestrator(): TTS\Application\TTS_Orchestrator {
+		$providers = array( new TTS\Providers\ElevenLabs_Provider() );
+
+		/**
+		 * Filter the registered text-to-speech providers.
+		 *
+		 * @param TTS\Providers\TTS_Provider_Interface[] $providers Registered providers.
+		 */
+		$providers = apply_filters( 'prc_audio_narration_tts_providers', $providers );
+
+		return new TTS\Application\TTS_Orchestrator( $providers );
 	}
 
 	/**

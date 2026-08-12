@@ -48,6 +48,7 @@ These plugins provide deep integration but are **not bundled** here:
 - [Action Scheduler](https://actionscheduler.org/) — bundled via `woocommerce/action-scheduler` Composer package in `prc-content-transformer`
 - Apple News API credentials — configure in **Settings → Apple News** after activation
 - Mailchimp API key — configure in **Settings → Email Builder** after activation
+- ElevenLabs API key — required by `prc-audio-narration` for speech synthesis; configure in **Settings → Audio Narration** after activation
 
 ## Local development
 
@@ -78,6 +79,14 @@ The environment will be available at `http://localhost:8888` (admin: `http://loc
 3. `connectors_ai_anthropic_api_key` / `ais_anthropic_api_key` WordPress options (set automatically when you configure the **ai-provider-for-anthropic** plugin via Settings → AI)
 
 For local wp-env development, the simplest approach is to fill in the `ANTHROPIC_API_KEY` value in `.wp-env.json` before running `npx @wordpress/env start`.
+
+`prc-audio-narration` needs an ElevenLabs API key, resolved in the same style:
+
+1. `ELEVENLABS_API_KEY` PHP constant (set via `.wp-env.json` `config`)
+2. `PRC_PLATFORM_ELEVENLABS_API_KEY` PHP constant
+3. The key saved in **Settings → Audio Narration**
+
+Constants take precedence, so a server-level key cannot be overridden from the admin screen. Narration is only ever generated when an editor explicitly asks for it — there is no hook on publish — because synthesis is billed per character and report-length content is long.
 
 ### WP-CLI
 
