@@ -35,8 +35,13 @@ require_once "{$_tests_dir}/includes/functions.php";
 
 /**
  * Manually load the plugin being tested
+ *
+ * Cross-plugin contract stubs load first so the audio script provider can be
+ * declared when prc-content-transformer is not part of the test environment.
+ * The stubs no-op when the real plugin is present.
  */
 function _manually_load_plugin() {
+	require_once __DIR__ . '/stubs/content-transformer-stubs.php';
 	require dirname( __DIR__ ) . '/prc-audio-narration.php';
 }
 

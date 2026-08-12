@@ -48,6 +48,7 @@ class Bootstrap {
 	 */
 	private function load_dependencies() {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-loader.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-script-provider-registrar.php';
 
 		$this->loader = new Loader();
 	}
@@ -60,7 +61,7 @@ class Bootstrap {
 	 * stays a manifest rather than a hook registry.
 	 */
 	private function register_modules() {
-		// Modules are wired up here as they are implemented.
+		new Script_Provider_Registrar( $this->loader );
 	}
 
 	/**
