@@ -83,6 +83,7 @@ class Bootstrap {
 		// Editor and REST surfaces.
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-rest-api.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-meta-boxes.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-markdown-for-agents-integration.php';
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-wp-cli-commands.php';
@@ -104,6 +105,7 @@ class Bootstrap {
 		new Action_Scheduler_Handler( $this->loader );
 		new REST_API( $this->loader );
 		new Meta_Boxes( $this->loader );
+		new Markdown_For_Agents_Integration( $this->loader );
 
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
 			\WP_CLI::add_command( 'prc-audio-narration', WP_CLI_Commands::class );
