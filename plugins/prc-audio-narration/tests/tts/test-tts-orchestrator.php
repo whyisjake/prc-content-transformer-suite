@@ -10,6 +10,8 @@ use PRC\Platform\Audio_Narration\TTS\Domain\TTS_Request;
 use PRC\Platform\Audio_Narration\TTS\Domain\TTS_Response;
 use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\TTS_Exception;
 use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\Provider_Unavailable_Exception;
+use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\Rate_Limit_Exception;
+use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\Synthesis_Failed_Exception;
 use PRC\Platform\Audio_Narration\TTS\Providers\TTS_Provider_Interface;
 
 require_once __DIR__ . '/../helpers/class-fake-tts-provider.php';
@@ -115,6 +117,66 @@ class TTSOrchestratorTest extends WP_UnitTestCase {
 			$this->assertStringContainsString( 'bad credentials', $e->getMessage() );
 			$this->assertStringContainsString( 'second', $e->getMessage() );
 			$this->assertStringContainsString( 'rate limited', $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Retryability survives aggregation across providers.
+	 *
+	 * The orchestrator wraps per-provider failures in one exception. If that
+	 * wrapper flattened retryability to false, the scheduler would give up on
+	 * a rate limit that was about to clear.
+	 */
+	public function test_aggregate_failure_preserves_retryability() {
+		$permanent = new Fake_TTS_Provider(
+			'permanent',
+			array(
+				'priority' => 1,
+				'throws'   => new Synthesis_Failed_Exception( 'bad request', false ),
+			)
+		);
+		$transient = new Fake_TTS_Provider(
+			'transient',
+			array(
+				'priority' => 2,
+				'throws'   => new Rate_Limit_Exception(),
+			)
+		);
+
+		try {
+			( new TTS_Orchestrator( array( $permanent, $transient ) ) )->synthesize( $this->request() );
+			$this->fail( 'Expected a TTS_Exception.' );
+		} catch ( TTS_Exception $e ) {
+			$this->assertTrue( $e->is_retryable() );
+		}
+	}
+
+	/**
+	 * Wholly permanent failures stay non-retryable.
+	 */
+	public function test_aggregate_failure_stays_permanent_when_all_are() {
+		$providers = array(
+			new Fake_TTS_Provider(
+				'a',
+				array(
+					'priority' => 1,
+					'throws'   => new Synthesis_Failed_Exception( 'bad request', false ),
+				)
+			),
+			new Fake_TTS_Provider(
+				'b',
+				array(
+					'priority' => 2,
+					'throws'   => new Synthesis_Failed_Exception( 'also bad', false ),
+				)
+			),
+		);
+
+		try {
+			( new TTS_Orchestrator( $providers ) )->synthesize( $this->request() );
+			$this->fail( 'Expected a TTS_Exception.' );
+		} catch ( TTS_Exception $e ) {
+			$this->assertFalse( $e->is_retryable() );
 		}
 	}
 

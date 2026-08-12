@@ -1,0 +1,280 @@
+<?php
+/**
+ * Class NarrationStoreTest
+ *
+ * @package PRC_Audio_Narration
+ */
+
+use PRC\Platform\Audio_Narration\Narration_Store;
+
+/**
+ * Tests for narration attachment storage and staleness tracking.
+ */
+class NarrationStoreTest extends WP_UnitTestCase {
+
+	/**
+	 * Store under test.
+	 *
+	 * @var Narration_Store
+	 */
+	private $store;
+
+	/**
+	 * Set up.
+	 */
+	public function set_up() {
+		parent::set_up();
+		$this->store = new Narration_Store();
+	}
+
+	/**
+	 * Create a published post.
+	 *
+	 * @return int
+	 */
+	private function make_post(): int {
+		return self::factory()->post->create(
+			array(
+				'post_title'   => 'Trust in local news',
+				'post_content' => 'Seventy-two percent of Americans agree.',
+				'post_status'  => 'publish',
+			)
+		);
+	}
+
+	/**
+	 * A post with no narration reports none.
+	 */
+	public function test_reports_no_narration_initially() {
+		$post_id = $this->make_post();
+
+		$this->assertFalse( $this->store->has_narration( $post_id ) );
+		$this->assertNull( $this->store->get( $post_id ) );
+	}
+
+	/**
+	 * Storing creates an attachment parented to the post.
+	 */
+	public function test_store_creates_attachment_parented_to_post() {
+		$post_id       = $this->make_post();
+		$attachment_id = $this->store->store( $post_id, 'AUDIO_BYTES' );
+
+		$this->assertIsInt( $attachment_id );
+		$this->assertEquals( $post_id, wp_get_post_parent_id( $attachment_id ) );
+		$this->assertEquals( 'attachment', get_post_type( $attachment_id ) );
+	}
+
+	/**
+	 * Stored metadata is retrievable.
+	 */
+	public function test_store_records_metadata() {
+		$post_id = $this->make_post();
+
+		$this->store->store(
+			$post_id,
+			'AUDIO_BYTES',
+			array(
+				'provider'   => 'elevenlabs',
+				'voice'      => 'voice-abc',
+				'duration'   => 12.5,
+				'characters' => 400,
+			)
+		);
+
+		$record = $this->store->get( $post_id );
+
+		$this->assertEquals( 'elevenlabs', $record['provider'] );
+		$this->assertEquals( 'voice-abc', $record['voice'] );
+		$this->assertEqualsWithDelta( 12.5, $record['duration'], 0.001 );
+		$this->assertEquals( 400, $record['characters'] );
+		$this->assertNotEmpty( $record['url'] );
+		$this->assertNotEmpty( $record['generated'] );
+	}
+
+	/**
+	 * Byte length is read from the file on disk.
+	 *
+	 * The podcast feed's enclosure length must match the real file exactly.
+	 */
+	public function test_byte_length_matches_file() {
+		$post_id = $this->make_post();
+		$audio   = str_repeat( 'a', 2048 );
+
+		$this->store->store( $post_id, $audio );
+
+		$this->assertEquals( 2048, $this->store->get( $post_id )['byte_length'] );
+	}
+
+	/**
+	 * A duration is optional and stored as null when unknown.
+	 */
+	public function test_duration_may_be_absent() {
+		$post_id = $this->make_post();
+
+		$this->store->store( $post_id, 'AUDIO', array( 'duration' => null ) );
+
+		$this->assertNull( $this->store->get( $post_id )['duration'] );
+	}
+
+	/**
+	 * Storing an empty payload is refused.
+	 */
+	public function test_refuses_empty_audio() {
+		$post_id = $this->make_post();
+
+		$result = $this->store->store( $post_id, '' );
+
+		$this->assertWPError( $result );
+		$this->assertFalse( $this->store->has_narration( $post_id ) );
+	}
+
+	/**
+	 * Storing against a nonexistent post is refused.
+	 */
+	public function test_refuses_missing_post() {
+		$this->assertWPError( $this->store->store( 999999, 'AUDIO' ) );
+	}
+
+	/**
+	 * Fresh narration is not stale.
+	 */
+	public function test_fresh_narration_is_not_stale() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		$this->assertFalse( $this->store->is_stale( $post_id ) );
+		$this->assertFalse( $this->store->get( $post_id )['is_stale'] );
+	}
+
+	/**
+	 * Editing the content makes narration stale.
+	 */
+	public function test_content_edit_makes_narration_stale() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Sixty-two percent of Americans agree.',
+			)
+		);
+
+		$this->assertTrue( $this->store->is_stale( $post_id ) );
+	}
+
+	/**
+	 * Editing only the title also makes narration stale.
+	 *
+	 * The title is spoken in the opening attribution line, so a title change
+	 * genuinely invalidates the audio.
+	 */
+	public function test_title_edit_makes_narration_stale() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'         => $post_id,
+				'post_title' => 'A different headline',
+			)
+		);
+
+		$this->assertTrue( $this->store->is_stale( $post_id ) );
+	}
+
+	/**
+	 * A post with no narration is not reported stale.
+	 */
+	public function test_unnarrated_post_is_not_stale() {
+		$this->assertFalse( $this->store->is_stale( $this->make_post() ) );
+	}
+
+	/**
+	 * Regenerating replaces the attachment rather than accumulating files.
+	 */
+	public function test_regeneration_deletes_previous_attachment() {
+		$post_id = $this->make_post();
+
+		$first = $this->store->store( $post_id, 'FIRST_AUDIO' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $first ) );
+
+		$second = $this->store->store( $post_id, 'SECOND_AUDIO' );
+
+		$this->assertNotEquals( $first, $second );
+		$this->assertNull( get_post( $first ), 'The previous attachment should have been deleted.' );
+		$this->assertEquals( $second, $this->store->get( $post_id )['attachment_id'] );
+	}
+
+	/**
+	 * Deleting removes the attachment and all metadata.
+	 */
+	public function test_delete_removes_attachment_and_meta() {
+		$post_id       = $this->make_post();
+		$attachment_id = $this->store->store( $post_id, 'AUDIO' );
+
+		$this->assertTrue( $this->store->delete( $post_id ) );
+
+		$this->assertNull( get_post( $attachment_id ) );
+		$this->assertNull( $this->store->get( $post_id ) );
+		$this->assertSame( '', get_post_meta( $post_id, Narration_Store::META_HASH, true ) );
+	}
+
+	/**
+	 * Deleting a post that has no narration is a harmless no-op.
+	 */
+	public function test_delete_without_narration_is_safe() {
+		$this->assertFalse( $this->store->delete( $this->make_post() ) );
+	}
+
+	/**
+	 * An attachment deleted directly from the Media Library reads as absent.
+	 *
+	 * Otherwise the meta box and feed would advertise a dead URL.
+	 */
+	public function test_orphaned_meta_reads_as_no_narration() {
+		$post_id       = $this->make_post();
+		$attachment_id = $this->store->store( $post_id, 'AUDIO' );
+
+		wp_delete_attachment( $attachment_id, true );
+
+		$this->assertNull( $this->store->get( $post_id ) );
+		$this->assertFalse( $this->store->has_narration( $post_id ) );
+	}
+
+	/**
+	 * Narrated posts are discoverable for the feed and status reports.
+	 */
+	public function test_lists_narrated_posts() {
+		$narrated   = $this->make_post();
+		$unnarrated = $this->make_post();
+
+		$this->store->store( $narrated, 'AUDIO' );
+
+		$ids = $this->store->get_narrated_post_ids();
+
+		$this->assertContains( $narrated, $ids );
+		$this->assertNotContains( $unnarrated, $ids );
+	}
+
+	/**
+	 * Storing fires an action other modules can observe.
+	 */
+	public function test_store_fires_action() {
+		$fired   = array();
+		$post_id = $this->make_post();
+
+		add_action(
+			'prc_audio_narration_stored',
+			function ( $stored_post_id, $attachment_id ) use ( &$fired ) {
+				$fired = array( $stored_post_id, $attachment_id );
+			},
+			10,
+			2
+		);
+
+		$attachment_id = $this->store->store( $post_id, 'AUDIO' );
+
+		$this->assertEquals( array( $post_id, $attachment_id ), $fired );
+	}
+}

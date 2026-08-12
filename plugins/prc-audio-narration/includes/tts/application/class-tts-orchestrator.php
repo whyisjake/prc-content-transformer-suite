@@ -11,6 +11,7 @@ use PRC\Platform\Audio_Narration\TTS\Domain\TTS_Request;
 use PRC\Platform\Audio_Narration\TTS\Domain\TTS_Response;
 use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\TTS_Exception;
 use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\Provider_Unavailable_Exception;
+use PRC\Platform\Audio_Narration\TTS\Domain\Exceptions\Synthesis_Failed_Exception;
 use PRC\Platform\Audio_Narration\TTS\Providers\TTS_Provider_Interface;
 
 /**
@@ -134,24 +135,30 @@ class TTS_Orchestrator {
 			);
 		}
 
-		$failures = array();
+		$failures  = array();
+		$retryable = false;
 
 		foreach ( $available as $provider ) {
 			try {
 				return $provider->synthesize( $request );
 			} catch ( TTS_Exception $e ) {
 				$failures[] = sprintf( '%s: %s', $provider->get_name(), $e->getMessage() );
+
+				// If any provider failed for a transient reason, the job as a
+				// whole is worth retrying. Collapsing this to a flat false
+				// would make the scheduler give up on a passing rate limit.
+				$retryable = $retryable || $e->is_retryable();
 			}
 		}
 
 		// Name every provider and its reason. A bare "synthesis failed" gives
 		// an operator nothing to act on.
-		throw new TTS_Exception(
+		throw new Synthesis_Failed_Exception(
 			sprintf(
 				'Every text-to-speech provider failed. %s',
 				implode( ' | ', $failures )
 			),
-			'tts_all_providers_failed'
+			$retryable
 		);
 	}
 }

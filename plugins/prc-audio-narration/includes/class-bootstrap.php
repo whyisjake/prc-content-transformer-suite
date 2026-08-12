@@ -68,6 +68,13 @@ class Bootstrap {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/providers/interface-tts-provider.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/providers/class-elevenlabs-provider.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/application/class-tts-orchestrator.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/application/class-script-chunker.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/application/class-audio-stitcher.php';
+
+		// Narration storage and orchestration.
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-narration-store.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-script-resolver.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-narration-service.php';
 
 		$this->loader = new Loader();
 	}
