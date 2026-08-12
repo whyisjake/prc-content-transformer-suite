@@ -215,8 +215,9 @@ class WP_CLI_Commands {
 	 * @return void
 	 */
 	public function status( $args, $assoc_args ) {
-		$store  = new Narration_Store();
-		$format = (string) ( $assoc_args['format'] ?? 'table' );
+		$service = new Narration_Service();
+		$store   = $service->store();
+		$format  = (string) ( $assoc_args['format'] ?? 'table' );
 
 		$post_ids = ! empty( $args )
 			? array( (int) $args[0] )
@@ -235,7 +236,7 @@ class WP_CLI_Commands {
 			$rows[] = array(
 				'post_id'    => $post_id,
 				'title'      => get_the_title( $post_id ),
-				'state'      => $this->describe_state( $post_id, $record ),
+				'state'      => $service->describe_state( $post_id, $record ),
 				'provider'   => $record['provider'] ?? '',
 				'voice'      => $record['voice'] ?? '',
 				'characters' => $record['characters'] ?? 0,
@@ -275,24 +276,5 @@ class WP_CLI_Commands {
 		}
 
 		\WP_CLI::warning( sprintf( 'Post %d had no narration.', $post_id ) );
-	}
-
-	/**
-	 * Describe the narration state of a post.
-	 *
-	 * @param int        $post_id The post ID.
-	 * @param array|null $record  The narration record.
-	 * @return string
-	 */
-	private function describe_state( int $post_id, ?array $record ): string {
-		if ( Action_Scheduler_Handler::is_pending( $post_id ) ) {
-			return 'pending';
-		}
-
-		if ( null === $record ) {
-			return 'none';
-		}
-
-		return $record['is_stale'] ? 'stale' : 'ready';
 	}
 }

@@ -261,4 +261,31 @@ class Narration_Service {
 	public function delete( int $post_id ): bool {
 		return $this->store->delete( $post_id );
 	}
+
+	/**
+	 * Describe the narration state of a post.
+	 *
+	 * The single definition of what the editor panel, the REST payload, and
+	 * the CLI status table all mean by these words, so they cannot drift
+	 * apart and report a post differently depending on where you look.
+	 *
+	 * @param int        $post_id The post ID.
+	 * @param array|null $record  Pre-fetched narration record, when available.
+	 * @return string One of none, pending, stale, ready.
+	 */
+	public function describe_state( int $post_id, ?array $record = null ): string {
+		if ( Action_Scheduler_Handler::is_pending( $post_id ) ) {
+			return 'pending';
+		}
+
+		if ( null === $record ) {
+			$record = $this->store->get( $post_id );
+		}
+
+		if ( null === $record ) {
+			return 'none';
+		}
+
+		return $record['is_stale'] ? 'stale' : 'ready';
+	}
 }

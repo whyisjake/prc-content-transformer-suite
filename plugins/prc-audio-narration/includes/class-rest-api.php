@@ -226,32 +226,13 @@ class REST_API {
 	private function build_state( int $post_id, Narration_Service $service ): array {
 		$record = $service->store()->get( $post_id );
 
+		$provider = $service->orchestrator()->get_active_provider();
+
 		return array(
 			'post_id'   => $post_id,
-			'state'     => $this->describe_state( $post_id, $record ),
+			'state'     => $service->describe_state( $post_id, $record ),
 			'narration' => $record,
-			'provider'  => $service->orchestrator()->get_active_provider()
-				? $service->orchestrator()->get_active_provider()->get_name()
-				: '',
+			'provider'  => $provider ? $provider->get_name() : '',
 		);
-	}
-
-	/**
-	 * Describe the narration state of a post.
-	 *
-	 * @param int        $post_id The post ID.
-	 * @param array|null $record  The narration record.
-	 * @return string One of none, pending, stale, ready.
-	 */
-	private function describe_state( int $post_id, ?array $record ): string {
-		if ( Action_Scheduler_Handler::is_pending( $post_id ) ) {
-			return 'pending';
-		}
-
-		if ( null === $record ) {
-			return 'none';
-		}
-
-		return $record['is_stale'] ? 'stale' : 'ready';
 	}
 }

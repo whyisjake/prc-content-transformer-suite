@@ -77,7 +77,9 @@ class Meta_Boxes {
 			return;
 		}
 
-		wp_register_script( 'prc-audio-narration-panel', '', array( 'wp-api-fetch' ), PRC_AUDIO_NARRATION_VERSION, true );
+		// A false src registers an inline-only script; an empty string would
+		// emit a <script src=""> that re-requests the current page.
+		wp_register_script( 'prc-audio-narration-panel', false, array( 'wp-api-fetch' ), PRC_AUDIO_NARRATION_VERSION, true );
 		wp_enqueue_script( 'prc-audio-narration-panel' );
 		wp_add_inline_script( 'prc-audio-narration-panel', $this->panel_script() );
 

@@ -91,18 +91,31 @@ class Settings {
 	 * @return string Empty string when no key is configured.
 	 */
 	public static function resolve_api_key(): string {
-		foreach ( array( 'ELEVENLABS_API_KEY', 'PRC_PLATFORM_ELEVENLABS_API_KEY' ) as $constant ) {
-			if ( defined( $constant ) ) {
-				$value = constant( $constant );
-				if ( is_string( $value ) && '' !== trim( $value ) ) {
-					return trim( $value );
-				}
-			}
+		$from_constant = self::api_key_from_constant();
+		if ( '' !== $from_constant ) {
+			return $from_constant;
 		}
 
 		$option_key = self::get( 'api_key', '' );
-		if ( is_string( $option_key ) && '' !== trim( $option_key ) ) {
-			return trim( $option_key );
+
+		return is_string( $option_key ) ? trim( $option_key ) : '';
+	}
+
+	/**
+	 * The API key supplied by a server constant, if any.
+	 *
+	 * @return string Empty string when no constant supplies one.
+	 */
+	private static function api_key_from_constant(): string {
+		foreach ( array( 'ELEVENLABS_API_KEY', 'PRC_PLATFORM_ELEVENLABS_API_KEY' ) as $constant ) {
+			if ( ! defined( $constant ) ) {
+				continue;
+			}
+
+			$value = constant( $constant );
+			if ( is_string( $value ) && '' !== trim( $value ) ) {
+				return trim( $value );
+			}
 		}
 
 		return '';
@@ -201,16 +214,7 @@ class Settings {
 	 * @return bool
 	 */
 	public static function api_key_is_constant(): bool {
-		foreach ( array( 'ELEVENLABS_API_KEY', 'PRC_PLATFORM_ELEVENLABS_API_KEY' ) as $constant ) {
-			if ( defined( $constant ) ) {
-				$value = constant( $constant );
-				if ( is_string( $value ) && '' !== trim( $value ) ) {
-					return true;
-				}
-			}
-		}
-
-		return false;
+		return '' !== self::api_key_from_constant();
 	}
 
 	/**
