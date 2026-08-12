@@ -80,6 +80,10 @@ class Bootstrap {
 		// when the scheduler runs the job.
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-action-scheduler-handler.php';
 
+		// Editor and REST surfaces.
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-rest-api.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-meta-boxes.php';
+
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-wp-cli-commands.php';
 		}
@@ -98,6 +102,8 @@ class Bootstrap {
 		new Settings( $this->loader );
 		new Script_Provider_Registrar( $this->loader );
 		new Action_Scheduler_Handler( $this->loader );
+		new REST_API( $this->loader );
+		new Meta_Boxes( $this->loader );
 
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
 			\WP_CLI::add_command( 'prc-audio-narration', WP_CLI_Commands::class );
