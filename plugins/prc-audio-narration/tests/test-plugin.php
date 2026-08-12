@@ -31,11 +31,24 @@ class PluginTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Core scaffold classes are autoloadable.
+	 * Core runtime classes are loaded on every request.
 	 */
 	public function test_classes_exist() {
 		$this->assertTrue( class_exists( Bootstrap::class ) );
 		$this->assertTrue( class_exists( Loader::class ) );
+	}
+
+	/**
+	 * Activation and deactivation handlers load only when their hooks fire.
+	 *
+	 * They are deliberately absent from the normal request path -- loading
+	 * them on every page load would be dead weight -- so this asserts the
+	 * lazy-load contract rather than their presence at runtime.
+	 */
+	public function test_lifecycle_handlers_load_on_demand() {
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-plugin-activator.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-plugin-deactivator.php';
+
 		$this->assertTrue( class_exists( 'PRC\Platform\Audio_Narration\Plugin_Activator' ) );
 		$this->assertTrue( class_exists( 'PRC\Platform\Audio_Narration\Plugin_Deactivator' ) );
 	}
@@ -80,6 +93,8 @@ class PluginTest extends WP_UnitTestCase {
 	 * Deactivation is safe when Action Scheduler is not present.
 	 */
 	public function test_deactivation_without_action_scheduler() {
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-plugin-deactivator.php';
+
 		$fired = false;
 		add_action(
 			'prc_audio_narration_deactivated',

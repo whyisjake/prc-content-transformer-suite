@@ -50,6 +50,23 @@ class Bootstrap {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-loader.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-script-provider-registrar.php';
 
+		// TTS infrastructure.
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/infrastructure/interface-http-client.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/infrastructure/class-http-client.php';
+
+		// TTS domain.
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/exceptions/class-tts-exception.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/exceptions/class-provider-unavailable-exception.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/exceptions/class-authentication-exception.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/exceptions/class-rate-limit-exception.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/exceptions/class-synthesis-failed-exception.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/class-tts-request.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/domain/class-tts-response.php';
+
+		// TTS providers and orchestration.
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/providers/interface-tts-provider.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/tts/application/class-tts-orchestrator.php';
+
 		$this->loader = new Loader();
 	}
 

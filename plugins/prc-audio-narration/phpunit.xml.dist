@@ -10,7 +10,13 @@
 	>
 	<testsuites>
 		<testsuite name="PRC Audio Narration Test Suite">
-			<directory>./tests/</directory>
+			<!-- Test files follow the WordPress test-*.php convention rather than
+			     PHPUnit's default *Test.php suffix, so the suffix is widened and
+			     the non-test support files are excluded explicitly. -->
+			<directory suffix=".php">./tests/</directory>
+			<exclude>./tests/bootstrap.php</exclude>
+			<exclude>./tests/helpers</exclude>
+			<exclude>./tests/stubs</exclude>
 		</testsuite>
 	</testsuites>
 	<coverage processUncoveredFiles="true">
