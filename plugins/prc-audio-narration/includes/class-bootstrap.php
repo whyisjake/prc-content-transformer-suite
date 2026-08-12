@@ -76,6 +76,14 @@ class Bootstrap {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-script-resolver.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-narration-service.php';
 
+		// Async processing. Loaded on every request so the hook is registered
+		// when the scheduler runs the job.
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-action-scheduler-handler.php';
+
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-wp-cli-commands.php';
+		}
+
 		$this->loader = new Loader();
 	}
 
@@ -89,6 +97,11 @@ class Bootstrap {
 	private function register_modules() {
 		new Settings( $this->loader );
 		new Script_Provider_Registrar( $this->loader );
+		new Action_Scheduler_Handler( $this->loader );
+
+		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
+			\WP_CLI::add_command( 'prc-audio-narration', WP_CLI_Commands::class );
+		}
 	}
 
 	/**

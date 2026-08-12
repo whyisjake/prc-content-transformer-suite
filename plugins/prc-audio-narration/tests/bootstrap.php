@@ -42,6 +42,16 @@ require_once "{$_tests_dir}/includes/functions.php";
  */
 function _manually_load_plugin() {
 	require_once __DIR__ . '/stubs/content-transformer-stubs.php';
+
+	// Action Scheduler ships with prc-content-transformer in production. It is
+	// pulled in as a dev dependency here so the scheduling tests -- including
+	// the duplicate-job guard that stops a double click costing twice -- run
+	// against the real implementation rather than being skipped.
+	$prc_audio_narration_action_scheduler = dirname( __DIR__ ) . '/vendor/woocommerce/action-scheduler/action-scheduler.php';
+	if ( file_exists( $prc_audio_narration_action_scheduler ) ) {
+		require_once $prc_audio_narration_action_scheduler;
+	}
+
 	require dirname( __DIR__ ) . '/prc-audio-narration.php';
 }
 
