@@ -1,0 +1,20 @@
+{
+	"name": "@prc/audio-narration",
+	"version": "1.0.0",
+	"description": "Convert articles into narrated audio",
+	"scripts": {
+		"test:php:local": "composer test"
+	},
+	"keywords": [
+		"wordpress",
+		"audio",
+		"text-to-speech",
+		"narration",
+		"podcast"
+	],
+	"author": "Pew Research Center",
+	"license": "GPL-2.0-or-later",
+	"devDependencies": {
+		"@wordpress/scripts": "^31.4.0"
+	}
+}

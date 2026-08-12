@@ -29,6 +29,7 @@ The demo activates **prc-scripts**, **prc-icon-library**, **prc-markdown-for-age
 | `prc-markdown-for-agents` | Serve articles as Markdown via `.md` / `/markdown` URLs for AI agents and crawlers |
 | `prc-pdf-extraction` | Extract text from PDF attachments via OCR (Claude, Gemini, WP AI) and expose via the markdown endpoint |
 | `prc-content-transformer` | AI-powered middleware that converts WordPress content to Apple News Format, email HTML, or plain text |
+| `prc-audio-narration` | Rewrites articles for the ear and synthesizes them to audio via a pluggable text-to-speech layer |
 | `prc-apple-news` | Publishes content to Apple News via the Apple News API |
 | `prc-email-builder` | Newsletter authoring and Mailchimp delivery (CPT, patterns, send UI) |
 | `markdown-comment-block` | Gutenberg block that renders Markdown in the editor |
