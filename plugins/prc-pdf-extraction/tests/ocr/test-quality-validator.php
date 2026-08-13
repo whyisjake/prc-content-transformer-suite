@@ -12,24 +12,11 @@ use PRC\Platform\PDF_Extraction\OCR\Domain\OCR_Response;
  * Quality Validator tests
  */
 class Quality_Validator_Test extends WP_UnitTestCase {
-	/**
-	 * Skip tests that trigger WordPress meta operations on PHP 8.2+
-	 * Due to WordPress core bug with SERIALIZATION_FORMAT_USE_UNSERIALIZE constant
-	 */
-	protected function skip_on_php_82_if_needed() {
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+. ' .
-				'Skipping tests that create posts/users/meta. These features work correctly in production.'
-			);
-		}
-	}
 
 	/**
 	 * Test validation passes with valid response
 	 */
 	public function test_validation_passes_with_valid_response() {
-		$this->skip_on_php_82_if_needed();
 		$validator = new Quality_Validator( 50, 0.7 );
 
 		$response = new OCR_Response(
@@ -53,7 +40,6 @@ class Quality_Validator_Test extends WP_UnitTestCase {
 	 * Test validation fails with low character count
 	 */
 	public function test_validation_fails_low_character_count() {
-		$this->skip_on_php_82_if_needed();
 		$validator = new Quality_Validator( 100, 0.7 );
 
 		$response = new OCR_Response(
@@ -78,7 +64,6 @@ class Quality_Validator_Test extends WP_UnitTestCase {
 	 * Test validation fails with low confidence
 	 */
 	public function test_validation_fails_low_confidence() {
-		$this->skip_on_php_82_if_needed();
 		$validator = new Quality_Validator( 50, 0.9 );
 
 		$response = new OCR_Response(
@@ -103,7 +88,6 @@ class Quality_Validator_Test extends WP_UnitTestCase {
 	 * Test validation fails without topline patterns
 	 */
 	public function test_validation_fails_without_topline_patterns() {
-		$this->skip_on_php_82_if_needed();
 		$validator = new Quality_Validator( 50, 0.7 );
 
 		$response = new OCR_Response(
@@ -128,7 +112,6 @@ class Quality_Validator_Test extends WP_UnitTestCase {
 	 * Test validation passes with percentages and years
 	 */
 	public function test_validation_passes_with_percentages_and_years() {
-		$this->skip_on_php_82_if_needed();
 		$validator = new Quality_Validator( 50, 0.7 );
 
 		$response = new OCR_Response(
@@ -151,8 +134,9 @@ class Quality_Validator_Test extends WP_UnitTestCase {
 	 * Test validation passes with n= and Q# patterns
 	 */
 	public function test_validation_passes_with_sample_size_and_questions() {
-		$this->skip_on_php_82_if_needed();
-		$validator = new Quality_Validator( 50, 0.7 );
+		// The minimum must sit below the sample text's length so this isolates
+		// pattern detection; at 50 it failed on length before reaching it.
+		$validator = new Quality_Validator( 10, 0.7 );
 
 		$response = new OCR_Response(
 			true,
@@ -174,7 +158,6 @@ class Quality_Validator_Test extends WP_UnitTestCase {
 	 * Test validation fails with unsuccessful response
 	 */
 	public function test_validation_fails_unsuccessful_response() {
-		$this->skip_on_php_82_if_needed();
 		$validator = new Quality_Validator( 50, 0.7 );
 
 		$response = new OCR_Response(

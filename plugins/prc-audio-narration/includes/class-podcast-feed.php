@@ -103,6 +103,102 @@ class Podcast_Feed {
 	}
 
 	/**
+	 * Problems with the configured channel artwork.
+	 *
+	 * Apple rejects a feed whose artwork is missing, unreachable, not square,
+	 * or outside 1400-3000 pixels. Nothing else catches that: the feed is
+	 * structurally valid either way, so the failure would surface at
+	 * submission rather than while someone is configuring it.
+	 *
+	 * @param string|null $url Artwork URL; defaults to the configured one.
+	 * @return string[] Human-readable problems, empty when the artwork is fine.
+	 */
+	public static function artwork_issues( ?string $url = null ): array {
+		$url = null === $url ? Settings::podcast( 'image' ) : $url;
+
+		if ( '' === trim( (string) $url ) ) {
+			return array( __( 'No artwork is set. Apple Podcasts requires channel artwork.', 'prc-audio-narration' ) );
+		}
+
+		$cache_key = 'prc_audio_narration_art_' . md5( $url );
+		$cached    = get_transient( $cache_key );
+
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$issues   = array();
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'  => 15,
+				'headers'  => array( 'Accept' => 'image/*' ),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			$issues[] = sprintf(
+				/* translators: %s: error message */
+				__( 'Artwork could not be fetched: %s', 'prc-audio-narration' ),
+				$response->get_error_message()
+			);
+		} else {
+			$code = (int) wp_remote_retrieve_response_code( $response );
+			$body = (string) wp_remote_retrieve_body( $response );
+
+			if ( $code < 200 || $code >= 300 ) {
+				$issues[] = sprintf(
+					/* translators: %d: HTTP status code */
+					__( 'Artwork URL returned HTTP %d.', 'prc-audio-narration' ),
+					$code
+				);
+			} elseif ( '' === $body ) {
+				$issues[] = __( 'Artwork URL returned no image data.', 'prc-audio-narration' );
+			} else {
+				$size = @getimagesizefromstring( $body ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+				if ( ! $size ) {
+					$issues[] = __( 'Artwork is not a readable image.', 'prc-audio-narration' );
+				} else {
+					list( $width, $height ) = $size;
+					$mime                   = $size['mime'] ?? '';
+
+					if ( ! in_array( $mime, array( 'image/jpeg', 'image/png' ), true ) ) {
+						$issues[] = sprintf(
+							/* translators: %s: detected MIME type */
+							__( 'Artwork must be JPEG or PNG; this is %s.', 'prc-audio-narration' ),
+							$mime
+						);
+					}
+
+					if ( $width !== $height ) {
+						$issues[] = sprintf(
+							/* translators: 1: width, 2: height */
+							__( 'Artwork must be square; this is %1$d by %2$d.', 'prc-audio-narration' ),
+							$width,
+							$height
+						);
+					}
+
+					if ( $width < 1400 || $width > 3000 ) {
+						$issues[] = sprintf(
+							/* translators: %d: width in pixels */
+							__( 'Artwork must be between 1400 and 3000 pixels; this is %d.', 'prc-audio-narration' ),
+							$width
+						);
+					}
+				}
+			}
+		}
+
+		// Cached either way. A reachable image is unlikely to change shape, and
+		// a broken URL should not mean a slow settings screen on every load.
+		set_transient( $cache_key, $issues, DAY_IN_SECONDS );
+
+		return $issues;
+	}
+
+	/**
 	 * Episodes for the feed, newest first.
 	 *
 	 * @return array<int, array<string, mixed>>

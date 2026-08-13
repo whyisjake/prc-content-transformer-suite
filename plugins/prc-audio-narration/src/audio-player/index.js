@@ -18,6 +18,7 @@ import {
 	Spinner,
 	TextControl,
 	ToggleControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalText as Text,
 } from '@wordpress/components';
 
@@ -32,9 +33,9 @@ const NAMESPACE = '/prc-audio-narration/v1';
  * the preview is to tell an editor whether this block will render anything
  * on the front end, which is not obvious from an empty player.
  *
- * @param {Object} props               Block props.
- * @param {Object} props.attributes    Block attributes.
- * @param {Object} props.context       Block context.
+ * @param {Object}   props               Block props.
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Object}   props.context       Block context.
  * @param {Function} props.setAttributes Attribute setter.
  * @return {Element} Editor markup.
  */
@@ -77,7 +78,9 @@ function Edit( { attributes, context, setAttributes } ) {
 					__nextHasNoMarginBottom
 					label={ __( 'Show duration', 'prc-audio-narration' ) }
 					checked={ attributes.showDuration }
-					onChange={ ( showDuration ) => setAttributes( { showDuration } ) }
+					onChange={ ( showDuration ) =>
+						setAttributes( { showDuration } )
+					}
 				/>
 			</PanelBody>
 		</InspectorControls>
@@ -108,7 +111,9 @@ function Edit( { attributes, context, setAttributes } ) {
 	} else if ( 'ready' === data.state && data.narration ) {
 		body = (
 			<figure>
-				{ attributes.label && <figcaption>{ attributes.label }</figcaption> }
+				{ attributes.label && (
+					<figcaption>{ attributes.label }</figcaption>
+				) }
 				{ /* eslint-disable-next-line jsx-a11y/media-has-caption */ }
 				<audio
 					controls
@@ -121,18 +126,23 @@ function Edit( { attributes, context, setAttributes } ) {
 	} else {
 		// Every non-ready state renders nothing on the front end, so the
 		// preview says which one it is rather than showing a dead player.
+		const reasons = {
+			stale: __(
+				'Narration is out of date. It still plays on the front end until it is regenerated.',
+				'prc-audio-narration'
+			),
+			pending: __(
+				'Narration is being generated.',
+				'prc-audio-narration'
+			),
+		};
+
 		const reason =
-			'stale' === data.state
-				? __(
-						'Narration is out of date and will not appear until it is regenerated.',
-						'prc-audio-narration'
-				  )
-				: 'pending' === data.state
-				? __( 'Narration is being generated.', 'prc-audio-narration' )
-				: __(
-						'This article has no narration yet. Generate it from the Audio Narration panel.',
-						'prc-audio-narration'
-				  );
+			reasons[ data.state ] ||
+			__(
+				'This article has no narration yet. Generate it from the Audio Narration panel.',
+				'prc-audio-narration'
+			);
 
 		body = (
 			<Placeholder

@@ -417,6 +417,106 @@ class PodcastFeedTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Missing artwork is reported.
+	 *
+	 * Apple rejects a feed without channel artwork, and nothing else catches
+	 * it: the feed is structurally valid either way, so the failure would
+	 * otherwise surface at submission.
+	 */
+	public function test_artwork_issue_when_unset() {
+		$issues = Podcast_Feed::artwork_issues( '' );
+
+		$this->assertNotEmpty( $issues );
+		$this->assertStringContainsString( 'No artwork', $issues[0] );
+	}
+
+	/**
+	 * An unreachable artwork URL is reported.
+	 */
+	public function test_artwork_issue_when_unreachable() {
+		add_filter(
+			'pre_http_request',
+			static function () {
+				return array(
+					'response' => array( 'code' => 404 ),
+					'body'     => '',
+				);
+			}
+		);
+
+		$issues = Podcast_Feed::artwork_issues( 'https://example.org/missing-' . wp_rand() . '.png' );
+
+		$this->assertNotEmpty( $issues );
+		$this->assertStringContainsString( '404', $issues[0] );
+	}
+
+	/**
+	 * Artwork that is too small is reported.
+	 *
+	 * Apple requires at least 1400 pixels square.
+	 */
+	public function test_artwork_issue_when_too_small() {
+		$png = $this->square_png( 100 );
+
+		add_filter(
+			'pre_http_request',
+			static function () use ( $png ) {
+				return array(
+					'response' => array( 'code' => 200 ),
+					'body'     => $png,
+				);
+			}
+		);
+
+		$issues = Podcast_Feed::artwork_issues( 'https://example.org/small-' . wp_rand() . '.png' );
+
+		$this->assertNotEmpty( $issues );
+		$this->assertStringContainsString( '1400', implode( ' ', $issues ) );
+	}
+
+	/**
+	 * Conforming artwork reports nothing.
+	 */
+	public function test_artwork_accepted_when_conforming() {
+		$png = $this->square_png( 1400 );
+
+		add_filter(
+			'pre_http_request',
+			static function () use ( $png ) {
+				return array(
+					'response' => array( 'code' => 200 ),
+					'body'     => $png,
+				);
+			}
+		);
+
+		$this->assertSame(
+			array(),
+			Podcast_Feed::artwork_issues( 'https://example.org/ok-' . wp_rand() . '.png' )
+		);
+	}
+
+	/**
+	 * Build a square PNG of the given size.
+	 *
+	 * @param int $size Width and height in pixels.
+	 * @return string Raw PNG bytes.
+	 */
+	private function square_png( int $size ): string {
+		if ( ! function_exists( 'imagecreatetruecolor' ) ) {
+			$this->markTestSkipped( 'GD is not available to build a test image.' );
+		}
+
+		$image = imagecreatetruecolor( $size, $size );
+		ob_start();
+		imagepng( $image );
+		$bytes = (string) ob_get_clean();
+		imagedestroy( $image );
+
+		return $bytes;
+	}
+
+	/**
 	 * The feed is cached between renders.
 	 */
 	public function test_feed_is_cached() {

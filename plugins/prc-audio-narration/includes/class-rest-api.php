@@ -271,6 +271,7 @@ class REST_API {
 					'image'       => Settings::podcast( 'image' ),
 				),
 				'podcast_feed_url'  => Podcast_Feed::url(),
+				'podcast_artwork_issues' => Podcast_Feed::artwork_issues(),
 			)
 		);
 	}
@@ -328,6 +329,12 @@ class REST_API {
 		}
 
 		update_option( Settings::OPTION_KEY, $settings );
+
+		// The artwork check is cached for a day; a new URL must be re-checked
+		// immediately or the screen would report the previous one's result.
+		if ( '' !== (string) ( $settings['podcast_image'] ?? '' ) ) {
+			delete_transient( 'prc_audio_narration_art_' . md5( (string) $settings['podcast_image'] ) );
+		}
 
 		return $this->get_settings();
 	}

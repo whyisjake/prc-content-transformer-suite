@@ -19,6 +19,7 @@
 	"author": "Pew Research Center",
 	"license": "GPL-2.0-or-later",
 	"devDependencies": {
-		"@wordpress/scripts": "^31.4.0"
+		"@wordpress/scripts": "^31.4.0",
+		"typescript": "^5.9.0"
 	}
 }

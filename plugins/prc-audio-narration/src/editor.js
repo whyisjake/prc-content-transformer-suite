@@ -9,7 +9,6 @@
 import { registerPlugin } from '@wordpress/plugins';
 import { PluginDocumentSettingPanel } from '@wordpress/editor';
 import { useSelect } from '@wordpress/data';
-import { store as coreStore } from '@wordpress/core-data';
 import { useEffect, useRef, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __, sprintf } from '@wordpress/i18n';
@@ -20,8 +19,11 @@ import {
 	Notice,
 	SelectControl,
 	Spinner,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalHStack as HStack,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalText as Text,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 
@@ -239,7 +241,10 @@ function NarrationPanel() {
 									onClick={ acceptCurrent }
 									disabled={ busy }
 								>
-									{ __( 'Keep current audio', 'prc-audio-narration' ) }
+									{ __(
+										'Keep current audio',
+										'prc-audio-narration'
+									) }
 								</Button>
 							</FlexItem>
 						</Flex>
@@ -248,7 +253,9 @@ function NarrationPanel() {
 			) }
 
 			<HStack justify="space-between">
-				<Text weight={ 600 }>{ __( 'Status', 'prc-audio-narration' ) }</Text>
+				<Text weight={ 600 }>
+					{ __( 'Status', 'prc-audio-narration' ) }
+				</Text>
 				<Text variant="muted">{ stateLabel( state ) }</Text>
 			</HStack>
 
@@ -260,7 +267,10 @@ function NarrationPanel() {
 						preload="none"
 						src={ narration.url }
 						style={ { width: '100%' } }
-						aria-label={ __( 'Narration preview', 'prc-audio-narration' ) }
+						aria-label={ __(
+							'Narration preview',
+							'prc-audio-narration'
+						) }
 					/>
 					<Text variant="muted">
 						{ sprintf(

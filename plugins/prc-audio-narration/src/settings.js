@@ -20,9 +20,13 @@ import {
 	SelectControl,
 	Spinner,
 	TextControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalDivider as Divider,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalHeading as Heading,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalText as Text,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis -- no stable equivalent; pinned to WP 6.8+.
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 
@@ -50,7 +54,10 @@ function keySourceHelp( source ) {
 		case 'constant':
 			return __( 'Set by a server constant.', 'prc-audio-narration' );
 		case 'connector':
-			return __( 'Set on the AI connectors screen.', 'prc-audio-narration' );
+			return __(
+				'Set on the AI connectors screen.',
+				'prc-audio-narration'
+			);
 		default:
 			return __( 'Saved on this site.', 'prc-audio-narration' );
 	}
@@ -102,7 +109,9 @@ function SettingsPage() {
 		return (
 			<Flex justify="flex-start" gap={ 2 }>
 				<Spinner />
-				<Text>{ __( 'Loading settings…', 'prc-audio-narration' ) }</Text>
+				<Text>
+					{ __( 'Loading settings…', 'prc-audio-narration' ) }
+				</Text>
 			</Flex>
 		);
 	}
@@ -147,7 +156,9 @@ function SettingsPage() {
 	// A key can be present without being editable here: constants and the
 	// connectors screen both win over the stored option.
 	const hasKey = settings.has_key;
-	const keyLocked = 'constant' === settings.key_source || 'connector' === settings.key_source;
+	const keyLocked =
+		'constant' === settings.key_source ||
+		'connector' === settings.key_source;
 	const showMaskedKey = hasKey && ! replacingKey;
 
 	const voiceOptions = [
@@ -164,7 +175,10 @@ function SettingsPage() {
 		value: model.id,
 		label: sprintf(
 			/* translators: 1: model identifier, 2: character ceiling */
-			__( '%1$s (up to %2$s characters per request)', 'prc-audio-narration' ),
+			__(
+				'%1$s (up to %2$s characters per request)',
+				'prc-audio-narration'
+			),
 			model.id,
 			model.max_characters.toLocaleString()
 		),
@@ -213,7 +227,11 @@ function SettingsPage() {
 				<CardBody>
 					<VStack spacing={ 4 }>
 						{ showMaskedKey ? (
-							<Flex align="flex-end" gap={ 3 } justify="flex-start">
+							<Flex
+								align="flex-end"
+								gap={ 3 }
+								justify="flex-start"
+							>
 								<FlexItem style={ { flexGrow: 1 } }>
 									<TextControl
 										__nextHasNoMarginBottom
@@ -223,7 +241,9 @@ function SettingsPage() {
 											'ElevenLabs API key',
 											'prc-audio-narration'
 										) }
-										help={ keySourceHelp( settings.key_source ) }
+										help={ keySourceHelp(
+											settings.key_source
+										) }
 										value={ KEY_MASK }
 										onChange={ () => {} }
 									/>
@@ -232,15 +252,24 @@ function SettingsPage() {
 									<FlexItem>
 										<Button
 											variant="secondary"
-											onClick={ () => setReplacingKey( true ) }
+											onClick={ () =>
+												setReplacingKey( true )
+											}
 										>
-											{ __( 'Replace', 'prc-audio-narration' ) }
+											{ __(
+												'Replace',
+												'prc-audio-narration'
+											) }
 										</Button>
 									</FlexItem>
 								) }
 							</Flex>
 						) : (
-							<Flex align="flex-end" gap={ 3 } justify="flex-start">
+							<Flex
+								align="flex-end"
+								gap={ 3 }
+								justify="flex-start"
+							>
 								<FlexItem style={ { flexGrow: 1 } }>
 									<TextControl
 										__nextHasNoMarginBottom
@@ -267,7 +296,10 @@ function SettingsPage() {
 												setApiKey( '' );
 											} }
 										>
-											{ __( 'Cancel', 'prc-audio-narration' ) }
+											{ __(
+												'Cancel',
+												'prc-audio-narration'
+											) }
 										</Button>
 									</FlexItem>
 								) }
@@ -301,8 +333,11 @@ function SettingsPage() {
 									),
 								},
 							] }
-							onChange={ ( stale_behavior ) =>
-								setSettings( { ...settings, stale_behavior } )
+							onChange={ ( staleBehavior ) =>
+								setSettings( {
+									...settings,
+									stale_behavior: staleBehavior,
+								} )
 							}
 						/>
 
@@ -315,8 +350,11 @@ function SettingsPage() {
 							) }
 							value={ settings.model_id }
 							options={ modelOptions }
-							onChange={ ( model_id ) =>
-								setSettings( { ...settings, model_id } )
+							onChange={ ( modelId ) =>
+								setSettings( {
+									...settings,
+									model_id: modelId,
+								} )
 							}
 						/>
 					</VStack>
@@ -334,28 +372,40 @@ function SettingsPage() {
 						{ voices.length > 0 ? (
 							<SelectControl
 								__nextHasNoMarginBottom
-								label={ __( 'Default voice', 'prc-audio-narration' ) }
+								label={ __(
+									'Default voice',
+									'prc-audio-narration'
+								) }
 								help={ __(
 									'Used for all narration unless a post overrides it.',
 									'prc-audio-narration'
 								) }
 								value={ settings.voice_id }
 								options={ voiceOptions }
-								onChange={ ( voice_id ) =>
-									setSettings( { ...settings, voice_id } )
+								onChange={ ( voiceId ) =>
+									setSettings( {
+										...settings,
+										voice_id: voiceId,
+									} )
 								}
 							/>
 						) : (
 							<TextControl
 								__nextHasNoMarginBottom
-								label={ __( 'Default voice ID', 'prc-audio-narration' ) }
+								label={ __(
+									'Default voice ID',
+									'prc-audio-narration'
+								) }
 								help={ __(
 									'Voices could not be loaded. Enter a voice ID manually.',
 									'prc-audio-narration'
 								) }
 								value={ settings.voice_id }
-								onChange={ ( voice_id ) =>
-									setSettings( { ...settings, voice_id } )
+								onChange={ ( voiceId ) =>
+									setSettings( {
+										...settings,
+										voice_id: voiceId,
+									} )
 								}
 							/>
 						) }
@@ -381,18 +431,35 @@ function SettingsPage() {
 				<CardBody>
 					<VStack spacing={ 4 }>
 						<Text variant="muted">
-							{ __( 'Narrated articles are published at', 'prc-audio-narration' ) }{ ' ' }
+							{ __(
+								'Narrated articles are published at',
+								'prc-audio-narration'
+							) }{ ' ' }
 							<ExternalLink href={ settings.podcast_feed_url }>
 								{ settings.podcast_feed_url }
 							</ExternalLink>
 						</Text>
 
-						{ ! settings.podcast_resolved.image && (
+						{ settings.podcast_artwork_issues?.length > 0 && (
 							<Notice status="warning" isDismissible={ false }>
-								{ __(
-									'Apple Podcasts requires channel artwork. Add an image URL below, or set a site icon, before submitting the feed.',
-									'prc-audio-narration'
-								) }
+								<strong>
+									{ __(
+										'Apple Podcasts will reject this feed:',
+										'prc-audio-narration'
+									) }
+								</strong>
+								<ul
+									style={ {
+										margin: '4px 0 0',
+										paddingLeft: '18px',
+									} }
+								>
+									{ settings.podcast_artwork_issues.map(
+										( issue ) => (
+											<li key={ issue }>{ issue }</li>
+										)
+									) }
+								</ul>
 							</Notice>
 						) }
 
@@ -404,12 +471,17 @@ function SettingsPage() {
 								settings.podcast_resolved.title
 							) }
 							value={ settings.podcast.podcast_title }
-							onChange={ ( value ) => setPodcast( 'podcast_title', value ) }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_title', value )
+							}
 						/>
 
 						<TextControl
 							__nextHasNoMarginBottom
-							label={ __( 'Show description', 'prc-audio-narration' ) }
+							label={ __(
+								'Show description',
+								'prc-audio-narration'
+							) }
 							value={ settings.podcast.podcast_description }
 							onChange={ ( value ) =>
 								setPodcast( 'podcast_description', value )
@@ -424,7 +496,9 @@ function SettingsPage() {
 								settings.podcast_resolved.author
 							) }
 							value={ settings.podcast.podcast_author }
-							onChange={ ( value ) => setPodcast( 'podcast_author', value ) }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_author', value )
+							}
 						/>
 
 						<TextControl
@@ -450,7 +524,9 @@ function SettingsPage() {
 								'prc-audio-narration'
 							) }
 							value={ settings.podcast.podcast_image }
-							onChange={ ( value ) => setPodcast( 'podcast_image', value ) }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_image', value )
+							}
 						/>
 
 						<TextControl
@@ -461,25 +537,43 @@ function SettingsPage() {
 								'prc-audio-narration'
 							) }
 							value={ settings.podcast.podcast_category }
-							onChange={ ( value ) => setPodcast( 'podcast_category', value ) }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_category', value )
+							}
 						/>
 
 						<SelectControl
 							__nextHasNoMarginBottom
-							label={ __( 'Explicit content', 'prc-audio-narration' ) }
+							label={ __(
+								'Explicit content',
+								'prc-audio-narration'
+							) }
 							value={ settings.podcast.podcast_explicit }
 							options={ [
-								{ value: 'false', label: __( 'No', 'prc-audio-narration' ) },
-								{ value: 'true', label: __( 'Yes', 'prc-audio-narration' ) },
+								{
+									value: 'false',
+									label: __( 'No', 'prc-audio-narration' ),
+								},
+								{
+									value: 'true',
+									label: __( 'Yes', 'prc-audio-narration' ),
+								},
 							] }
-							onChange={ ( value ) => setPodcast( 'podcast_explicit', value ) }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_explicit', value )
+							}
 						/>
 					</VStack>
 				</CardBody>
 			</Card>
 
 			<FlexItem>
-				<Button variant="primary" onClick={ save } isBusy={ saving } disabled={ saving }>
+				<Button
+					variant="primary"
+					onClick={ save }
+					isBusy={ saving }
+					disabled={ saving }
+				>
 					{ saving
 						? __( 'Saving…', 'prc-audio-narration' )
 						: __( 'Save settings', 'prc-audio-narration' ) }
