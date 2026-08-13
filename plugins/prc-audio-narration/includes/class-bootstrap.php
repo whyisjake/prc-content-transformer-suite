@@ -86,6 +86,7 @@ class Bootstrap {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-editor-panel.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-markdown-for-agents-integration.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-podcast-feed.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-player-block.php';
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-wp-cli-commands.php';
@@ -110,6 +111,7 @@ class Bootstrap {
 		new Editor_Panel( $this->loader );
 		new Markdown_For_Agents_Integration( $this->loader );
 		new Podcast_Feed( $this->loader );
+		new Player_Block( $this->loader );
 
 		if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( '\WP_CLI' ) ) {
 			\WP_CLI::add_command( 'prc-audio-narration', WP_CLI_Commands::class );
