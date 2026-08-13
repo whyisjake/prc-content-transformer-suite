@@ -122,12 +122,33 @@ class AudioPlayerBlockTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Stale narration renders nothing.
+	 * Stale narration keeps playing by default.
 	 *
-	 * A reader cannot tell the audio no longer matches the article, so it is
-	 * withheld rather than played beside text it does not match.
+	 * Editing an article is routine. Pulling the player on every save would
+	 * hand an editorial decision to a hash comparison.
 	 */
-	public function test_renders_nothing_for_stale_narration() {
+	public function test_stale_narration_still_renders_by_default() {
+		$post_id = $this->make_narrated_post();
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Entirely different content.',
+			)
+		);
+
+		$this->go_to( get_permalink( $post_id ) );
+		the_post();
+
+		$this->assertStringContainsString( '<audio', $this->block->render() );
+	}
+
+	/**
+	 * Sites that opt in can withhold stale narration instead.
+	 */
+	public function test_stale_narration_hidden_when_configured() {
+		add_filter( 'prc_audio_narration_stale_behavior', fn() => 'hide' );
+
 		$post_id = $this->make_narrated_post();
 
 		wp_update_post(

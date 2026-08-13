@@ -152,6 +152,18 @@ function NarrationPanel() {
 			.finally( () => setBusy( false ) );
 	};
 
+	// Accepts the existing audio for changed content. Costs nothing, and is
+	// the common case when an edit does not change what is spoken.
+	const acceptCurrent = () => {
+		setBusy( true );
+		setError( null );
+
+		apiFetch( { path: `${ path }/acknowledge`, method: 'POST' } )
+			.then( setData )
+			.catch( ( err ) => setError( err.message ) )
+			.finally( () => setBusy( false ) );
+	};
+
 	// Estimating resolves the narration script, which is a model call, so it
 	// is an explicit action rather than something the panel does on load.
 	const loadEstimate = () => {
@@ -212,10 +224,26 @@ function NarrationPanel() {
 
 			{ 'stale' === state && (
 				<Notice status="warning" isDismissible={ false }>
-					{ __(
-						'This post changed after the audio was generated. Regenerate to match the current text.',
-						'prc-audio-narration'
-					) }
+					<VStack spacing={ 2 }>
+						<Text>
+							{ __(
+								'This post changed after the audio was generated. The player is still showing — regenerate it, or keep it if the edit does not change what is spoken.',
+								'prc-audio-narration'
+							) }
+						</Text>
+						<Flex gap={ 2 } justify="flex-start">
+							<FlexItem>
+								<Button
+									variant="secondary"
+									size="small"
+									onClick={ acceptCurrent }
+									disabled={ busy }
+								>
+									{ __( 'Keep current audio', 'prc-audio-narration' ) }
+								</Button>
+							</FlexItem>
+						</Flex>
+					</VStack>
 				</Notice>
 			) }
 

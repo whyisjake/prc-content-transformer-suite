@@ -276,6 +276,38 @@ function SettingsPage() {
 
 						<SelectControl
 							__nextHasNoMarginBottom
+							label={ __(
+								'When an article is edited',
+								'prc-audio-narration'
+							) }
+							help={ __(
+								'Editing an article does not change its audio. Choose whether the existing narration keeps playing until someone regenerates it.',
+								'prc-audio-narration'
+							) }
+							value={ settings.stale_behavior }
+							options={ [
+								{
+									value: 'keep',
+									label: __(
+										'Keep playing the existing audio',
+										'prc-audio-narration'
+									),
+								},
+								{
+									value: 'hide',
+									label: __(
+										'Hide the audio until it is regenerated',
+										'prc-audio-narration'
+									),
+								},
+							] }
+							onChange={ ( stale_behavior ) =>
+								setSettings( { ...settings, stale_behavior } )
+							}
+						/>
+
+						<SelectControl
+							__nextHasNoMarginBottom
 							label={ __( 'Model', 'prc-audio-narration' ) }
 							help={ __(
 								'The character ceiling determines how long articles are split for synthesis. Fewer splits means fewer audible seams.',

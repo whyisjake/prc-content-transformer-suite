@@ -120,10 +120,7 @@ class Player_Block {
 
 		$record = $this->store->get( $post_id );
 
-		// Nothing to play, or the audio no longer matches the article. A
-		// reader cannot tell that narration is out of date, so it is withheld
-		// rather than played alongside text it does not match.
-		if ( null === $record || $record['is_stale'] || '' === $record['url'] ) {
+		if ( ! $this->store->should_publish( $post_id, $record ) ) {
 			return '';
 		}
 

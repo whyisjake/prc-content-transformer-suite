@@ -126,9 +126,7 @@ class Podcast_Feed {
 
 			$record = $this->store->get( $post_id );
 
-			// Stale narration no longer matches the article. A subscriber
-			// cannot tell, so it is withheld rather than published.
-			if ( null === $record || $record['is_stale'] ) {
+			if ( ! $this->store->should_publish( $post_id, $record ) ) {
 				continue;
 			}
 

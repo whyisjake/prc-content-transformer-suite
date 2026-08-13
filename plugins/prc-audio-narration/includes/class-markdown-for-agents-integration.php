@@ -66,7 +66,7 @@ class Markdown_For_Agents_Integration {
 
 		$record = $this->store->get( $post->ID );
 
-		if ( null === $record || $record['is_stale'] ) {
+		if ( ! $this->store->should_publish( $post->ID, $record ) ) {
 			return $data;
 		}
 
@@ -135,7 +135,7 @@ class Markdown_For_Agents_Integration {
 
 			$record = $this->store->get( $post_id );
 
-			if ( null === $record || $record['is_stale'] ) {
+			if ( ! $this->store->should_publish( $post_id, $record ) ) {
 				continue;
 			}
 

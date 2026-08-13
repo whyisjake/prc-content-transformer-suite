@@ -178,6 +178,65 @@ class Narration_Store {
 	}
 
 	/**
+	 * Whether narration should appear on public surfaces.
+	 *
+	 * The single decision the player block, the podcast feed, and the agent
+	 * discovery surfaces all defer to, so they cannot disagree about whether a
+	 * given article has listenable audio.
+	 *
+	 * Out-of-date narration is published by default. An edit is routine, and
+	 * withholding audio on every save hands an editorial decision to a hash
+	 * comparison. Sites that would rather withhold it can set the behavior to
+	 * hide.
+	 *
+	 * @param int        $post_id The post ID.
+	 * @param array|null $record  Pre-fetched narration record.
+	 * @return bool
+	 */
+	public function should_publish( int $post_id, ?array $record = null ): bool {
+		if ( null === $record ) {
+			$record = $this->get( $post_id );
+		}
+
+		if ( null === $record || '' === $record['url'] ) {
+			return false;
+		}
+
+		if ( ! $record['is_stale'] ) {
+			return true;
+		}
+
+		return 'hide' !== Settings::stale_behavior();
+	}
+
+	/**
+	 * Accept the current content as matching the stored audio.
+	 *
+	 * Clears the out-of-date state without spending anything on regeneration,
+	 * for the common newsroom case where an edit -- a typo, a tag, a caption --
+	 * does not change what the narration says.
+	 *
+	 * @param int $post_id The post ID.
+	 * @return bool Whether anything was updated.
+	 */
+	public function acknowledge( int $post_id ): bool {
+		if ( ! $this->has_narration( $post_id ) ) {
+			return false;
+		}
+
+		update_post_meta( $post_id, self::META_HASH, self::content_hash( $post_id ) );
+
+		/**
+		 * Fires when an editor accepts existing audio for changed content.
+		 *
+		 * @param int $post_id The post ID.
+		 */
+		do_action( 'prc_audio_narration_acknowledged', $post_id );
+
+		return true;
+	}
+
+	/**
 	 * Byte length of the stored audio file.
 	 *
 	 * Read from the file itself because the podcast feed's enclosure length

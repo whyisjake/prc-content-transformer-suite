@@ -95,6 +95,46 @@ class REST_API {
 				),
 			)
 		);
+
+		register_rest_route(
+			self::NAMESPACE_V1,
+			'/posts/(?P<post_id>\d+)/narration/acknowledge',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'acknowledge' ),
+				'permission_callback' => array( $this, 'can_edit_post' ),
+				'args'                => array(
+					'post_id' => array(
+						'required'          => true,
+						'validate_callback' => static fn( $value ) => is_numeric( $value ),
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Accept existing audio for changed content.
+	 *
+	 * Clears the out-of-date state without regenerating, for edits that do not
+	 * change what the narration says.
+	 *
+	 * @param \WP_REST_Request $request The request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function acknowledge( $request ) {
+		$post_id = (int) $request['post_id'];
+		$service = new Narration_Service();
+
+		if ( ! $service->store()->acknowledge( $post_id ) ) {
+			return new \WP_Error(
+				'prc_audio_narration_nothing_to_accept',
+				'This post has no narration to accept.',
+				array( 'status' => 400 )
+			);
+		}
+
+		return rest_ensure_response( $this->build_state( $post_id, $service ) );
 	}
 
 	/**
@@ -217,6 +257,7 @@ class REST_API {
 		return rest_ensure_response(
 			array(
 				'voice_id'          => Settings::get( 'voice_id', '' ),
+				'stale_behavior'    => Settings::stale_behavior(),
 				'model_id'          => Settings::model_id(),
 				'models'            => $models,
 				'has_key'           => '' !== Settings::resolve_api_key(),
@@ -260,7 +301,7 @@ class REST_API {
 	public function update_settings( $request ) {
 		$settings = Settings::all();
 
-		foreach ( array( 'voice_id', 'model_id' ) as $field ) {
+		foreach ( array( 'voice_id', 'model_id', 'stale_behavior' ) as $field ) {
 			if ( null !== $request->get_param( $field ) ) {
 				$settings[ $field ] = (string) $request->get_param( $field );
 			}

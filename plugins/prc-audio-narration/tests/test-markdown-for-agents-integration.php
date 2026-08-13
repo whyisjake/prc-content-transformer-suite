@@ -106,12 +106,30 @@ class MarkdownForAgentsIntegrationTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Stale narration is not advertised.
-	 *
-	 * A crawler cannot tell that the audio no longer matches the article, so
-	 * publishing the URL would be worse than publishing nothing.
+	 * Stale narration is still advertised by default.
+	 */
+	public function test_frontmatter_keeps_stale_narration_by_default() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Entirely different content.',
+			)
+		);
+
+		$data = $this->integration->enrich_frontmatter( array(), get_post( $post_id ) );
+
+		$this->assertArrayHasKey( 'audio_url', $data );
+	}
+
+	/**
+	 * Sites that opt in can withhold stale narration from agents.
 	 */
 	public function test_frontmatter_omits_stale_narration() {
+		add_filter( 'prc_audio_narration_stale_behavior', fn() => 'hide' );
+
 		$post_id = $this->make_post();
 		$this->store->store( $post_id, 'AUDIO' );
 
@@ -168,6 +186,8 @@ class MarkdownForAgentsIntegrationTest extends WP_UnitTestCase {
 	 * Stale narration is excluded from the section.
 	 */
 	public function test_stale_narration_excluded_from_section() {
+		add_filter( 'prc_audio_narration_stale_behavior', fn() => 'hide' );
+
 		$fresh = $this->make_post( 'Fresh article' );
 		$stale = $this->make_post( 'Stale article' );
 

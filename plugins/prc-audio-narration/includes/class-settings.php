@@ -60,13 +60,38 @@ class Settings {
 
 		return array_merge(
 			array(
-				'api_key'  => '',
-				'voice_id' => '',
-				'model_id' => self::DEFAULT_MODEL,
+				'api_key'        => '',
+				'voice_id'       => '',
+				'model_id'       => self::DEFAULT_MODEL,
+				'stale_behavior' => 'keep',
 			),
 			self::podcast_defaults(),
 			$stored
 		);
+	}
+
+	/**
+	 * How out-of-date narration is treated on public surfaces.
+	 *
+	 * Defaults to keeping it. Editing an article is routine -- a typo fix, a
+	 * correction, a new sentence -- and pulling the player, the feed episode,
+	 * and the frontmatter entry on every save takes the decision away from the
+	 * newsroom and hands it to a hash comparison. Editors are told the audio is
+	 * out of date and choose what to do about it.
+	 *
+	 * @return string One of keep, hide.
+	 */
+	public static function stale_behavior(): string {
+		$value = (string) self::get( 'stale_behavior', 'keep' );
+
+		/**
+		 * Filter how out-of-date narration is treated publicly.
+		 *
+		 * @param string $behavior One of keep, hide.
+		 */
+		$value = (string) apply_filters( 'prc_audio_narration_stale_behavior', $value );
+
+		return 'hide' === $value ? 'hide' : 'keep';
 	}
 
 	/**
@@ -306,11 +331,14 @@ class Settings {
 		}
 
 		$sanitized = array(
-			'api_key'  => $api_key,
-			'voice_id' => isset( $input['voice_id'] ) ? sanitize_text_field( $input['voice_id'] ) : '',
-			'model_id' => isset( $input['model_id'] ) && '' !== $input['model_id']
+			'api_key'        => $api_key,
+			'voice_id'       => isset( $input['voice_id'] ) ? sanitize_text_field( $input['voice_id'] ) : '',
+			'model_id'       => isset( $input['model_id'] ) && '' !== $input['model_id']
 				? sanitize_text_field( $input['model_id'] )
 				: self::DEFAULT_MODEL,
+			'stale_behavior' => isset( $input['stale_behavior'] ) && 'hide' === $input['stale_behavior']
+				? 'hide'
+				: 'keep',
 		);
 
 		foreach ( array_keys( self::podcast_defaults() ) as $key ) {

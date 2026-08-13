@@ -276,6 +276,127 @@ class NarrationStoreTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Out-of-date narration is still publishable by default.
+	 *
+	 * Editing an article is routine; withholding audio on every save would
+	 * hand an editorial decision to a hash comparison.
+	 */
+	public function test_stale_narration_is_publishable_by_default() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Changed.',
+			)
+		);
+
+		$this->assertTrue( $this->store->is_stale( $post_id ) );
+		$this->assertTrue( $this->store->should_publish( $post_id ) );
+	}
+
+	/**
+	 * Sites can opt into withholding it instead.
+	 */
+	public function test_stale_narration_withheld_when_configured() {
+		add_filter( 'prc_audio_narration_stale_behavior', fn() => 'hide' );
+
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Changed.',
+			)
+		);
+
+		$this->assertFalse( $this->store->should_publish( $post_id ) );
+	}
+
+	/**
+	 * A post with no narration is never publishable.
+	 */
+	public function test_unnarrated_post_is_not_publishable() {
+		$this->assertFalse( $this->store->should_publish( $this->make_post() ) );
+	}
+
+	/**
+	 * Accepting current content clears the out-of-date state.
+	 *
+	 * The common newsroom case: an edit that does not change what is spoken.
+	 */
+	public function test_acknowledge_clears_stale_state() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'A small correction.',
+			)
+		);
+		$this->assertTrue( $this->store->is_stale( $post_id ) );
+
+		$this->assertTrue( $this->store->acknowledge( $post_id ) );
+
+		$this->assertFalse( $this->store->is_stale( $post_id ) );
+	}
+
+	/**
+	 * Accepting does not touch the audio itself.
+	 */
+	public function test_acknowledge_keeps_the_same_attachment() {
+		$post_id       = $this->make_post();
+		$attachment_id = $this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'A small correction.',
+			)
+		);
+		$this->store->acknowledge( $post_id );
+
+		$this->assertEquals( $attachment_id, $this->store->get( $post_id )['attachment_id'] );
+	}
+
+	/**
+	 * A later edit makes it stale again.
+	 *
+	 * Accepting one edit must not permanently silence the warning.
+	 */
+	public function test_acknowledge_only_covers_the_current_content() {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'First edit.',
+			)
+		);
+		$this->store->acknowledge( $post_id );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Second edit.',
+			)
+		);
+
+		$this->assertTrue( $this->store->is_stale( $post_id ) );
+	}
+
+	/**
+	 * There is nothing to accept without narration.
+	 */
+	public function test_acknowledge_without_narration_is_a_no_op() {
+		$this->assertFalse( $this->store->acknowledge( $this->make_post() ) );
+	}
+
+	/**
 	 * Deleting removes the attachment and all metadata.
 	 */
 	public function test_delete_removes_attachment_and_meta() {

@@ -244,11 +244,32 @@ class PodcastFeedTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Stale narration is withheld.
+	 * Stale narration stays in the feed by default.
 	 *
-	 * A subscriber cannot tell that the audio no longer matches the article.
+	 * Removing an episode a subscriber has already downloaded is worse than
+	 * leaving audio that trails a light edit to the article.
 	 */
-	public function test_stale_narration_is_excluded() {
+	public function test_stale_narration_stays_by_default() {
+		$post_id = $this->make_narrated_post( 'Stale article' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => 'Entirely different content.',
+			)
+		);
+
+		$rss = $this->parse( $this->feed->build() );
+
+		$this->assertCount( 1, $rss->channel->item );
+	}
+
+	/**
+	 * Sites that opt in can withhold stale episodes instead.
+	 */
+	public function test_stale_narration_excluded_when_configured() {
+		add_filter( 'prc_audio_narration_stale_behavior', fn() => 'hide' );
+
 		$post_id = $this->make_narrated_post( 'Stale article' );
 
 		wp_update_post(
