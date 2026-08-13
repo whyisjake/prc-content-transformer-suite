@@ -233,10 +233,32 @@ class SettingsRestTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * An unconfigured site returns no voices rather than erroring.
+	 */
+	public function test_voices_empty_without_key() {
+		if ( '' !== Settings::resolve_api_key() ) {
+			$this->markTestSkipped( 'A key is supplied by the environment.' );
+		}
+
+		wp_set_current_user( $this->admin );
+
+		$request  = new WP_REST_Request( 'GET', '/' . REST_API::NAMESPACE_V1 . '/voices' );
+		$response = rest_get_server()->dispatch( $request );
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertSame( array(), $response->get_data()['voices'] );
+	}
+
+	/**
 	 * Voices are served from cache without calling the provider.
+	 *
+	 * A key must be configured for this path to be reachable at all -- an
+	 * unconfigured site short-circuits before the cache, which is why this
+	 * sets one rather than relying on the environment.
 	 */
 	public function test_voices_served_from_cache() {
 		wp_set_current_user( $this->admin );
+		update_option( Settings::OPTION_KEY, array( 'api_key' => 'test-key' ) );
 
 		set_transient(
 			'prc_audio_narration_voices',
