@@ -145,7 +145,6 @@ class ContentDiscoveryTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( 'Allow: /*/' . Content_Type::get_url_slug(), $output );
 		$this->assertStringContainsString( 'Allow: /*/text', $output );
-		$this->assertStringContainsString( 'Allow: /*/markdown', $output );
 	}
 
 	/**

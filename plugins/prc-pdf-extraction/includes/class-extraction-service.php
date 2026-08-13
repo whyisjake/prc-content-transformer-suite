@@ -250,7 +250,15 @@ class Extraction_Service {
 		?int $existing_id = null,
 		?float $duration_seconds = null
 	) {
-		$parent       = get_post( $parent_id );
+		$parent = get_post( $parent_id );
+
+		if ( ! $parent instanceof \WP_Post ) {
+			return new \WP_Error(
+				'prc_pdf_extraction_missing_parent',
+				sprintf( 'Parent post %d does not exist.', $parent_id )
+			);
+		}
+
 		$plain_text   = $response->get_text();
 		$markdown     = $response->get_markdown();
 		$gutenberg    = $response->get_gutenberg();
@@ -259,7 +267,11 @@ class Extraction_Service {
 		$post_data = array(
 			'post_type'    => Content_Type::get_post_type(),
 			'post_title'   => sprintf( 'Extracted: %s - %s', $parent->post_title, $topline['label'] ),
-			'post_content' => $post_content,
+			// wp_slash() counteracts the wp_unslash() inside wp_insert_post, which
+			// would otherwise strip backslashes out of the extracted content.
+			// Markdown uses them for escapes -- \*, \_, \| inside tables -- so
+			// without this an escaped character is silently corrupted on save.
+			'post_content' => wp_slash( $post_content ),
 			'post_status'  => 'publish',
 			'post_parent'  => $parent_id,
 		);
