@@ -8,7 +8,7 @@
 
 import { registerPlugin } from '@wordpress/plugins';
 import { PluginDocumentSettingPanel } from '@wordpress/editor';
-import { useSelect } from '@wordpress/data';
+import { useSelect, useDispatch } from '@wordpress/data';
 import { useEffect, useRef, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __, sprintf } from '@wordpress/i18n';
@@ -59,7 +59,14 @@ function NarrationPanel() {
 		[]
 	);
 
+	const isDirty = useSelect(
+		( select ) => select( 'core/editor' ).isEditedPostDirty(),
+		[]
+	);
+	const { savePost } = useDispatch( 'core/editor' );
+
 	const [ data, setData ] = useState( null );
+	const [ saving, setSaving ] = useState( false );
 	const [ voices, setVoices ] = useState( [] );
 	const [ voiceOverride, setVoiceOverride ] = useState( '' );
 	const [ busy, setBusy ] = useState( false );
@@ -127,19 +134,48 @@ function NarrationPanel() {
 		);
 	}
 
+	/**
+	 * Save pending edits before an action that reads the saved post.
+	 *
+	 * Resolves immediately when there is nothing to save, so a clean post does
+	 * not get a pointless revision.
+	 *
+	 * @return {Promise} Resolves once the post is saved.
+	 */
+	const saveFirst = () => {
+		if ( ! isDirty ) {
+			return Promise.resolve();
+		}
+
+		setSaving( true );
+
+		return Promise.resolve( savePost() ).finally( () =>
+			setSaving( false )
+		);
+	};
+
 	const run = ( method ) => {
 		setBusy( true );
 		setError( null );
 
-		apiFetch( {
-			path,
-			method,
-			// Only sent when the editor picked one; otherwise the site default
-			// applies and is resolved server-side.
-			...( 'POST' === method && voiceOverride
-				? { data: { voice_id: voiceOverride } }
-				: {} ),
-		} )
+		// Both estimating and generating read the saved post on the server, so
+		// unsaved edits would be costed and narrated from the previous version.
+		// Saving first is what makes the number, and the audio, match what the
+		// editor is looking at.
+		const ready = 'DELETE' === method ? Promise.resolve() : saveFirst();
+
+		ready
+			.then( () =>
+				apiFetch( {
+					path,
+					method,
+					// Only sent when the editor picked one; otherwise the site
+					// default applies and is resolved server-side.
+					...( 'POST' === method && voiceOverride
+						? { data: { voice_id: voiceOverride } }
+						: {} ),
+				} )
+			)
 			.then( ( next ) => {
 				setData( next );
 				setEstimate( null );
@@ -170,7 +206,10 @@ function NarrationPanel() {
 	// is an explicit action rather than something the panel does on load.
 	const loadEstimate = () => {
 		setBusy( true );
-		apiFetch( { path: `${ path }?estimate=1` } )
+		setError( null );
+
+		saveFirst()
+			.then( () => apiFetch( { path: `${ path }?estimate=1` } ) )
 			.then( ( next ) => setEstimate( next.estimate ) )
 			.catch( ( err ) => setError( err.message ) )
 			.finally( () => setBusy( false ) );
@@ -353,6 +392,18 @@ function NarrationPanel() {
 					</FlexItem>
 				) }
 			</Flex>
+
+			{ saving && (
+				<Flex justify="flex-start" gap={ 2 }>
+					<Spinner />
+					<Text variant="muted">
+						{ __(
+							'Saving your changes first…',
+							'prc-audio-narration'
+						) }
+					</Text>
+				</Flex>
+			) }
 
 			<Text variant="muted">
 				{ __(
