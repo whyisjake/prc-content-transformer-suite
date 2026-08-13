@@ -104,21 +104,61 @@ class Narration_Store {
 			return null;
 		}
 
-		$duration = get_post_meta( $post_id, self::META_DURATION, true );
+		$stored_duration = get_post_meta( $post_id, self::META_DURATION, true );
+		$duration        = '' === $stored_duration ? null : (float) $stored_duration;
+
+		$attachment_meta = wp_get_attachment_metadata( $attachment_id );
+		$attachment_meta = is_array( $attachment_meta ) ? $attachment_meta : array();
+
+		if ( null === $duration && ! empty( $attachment_meta['length'] ) ) {
+			// Not every provider reports a duration -- ElevenLabs does not --
+			// so fall back to what WordPress already extracted with getID3
+			// when the file was attached. That is more trustworthy than
+			// deriving it from byte length, which would assume a constant
+			// bitrate and a fixed output format.
+			$duration = (float) $attachment_meta['length'];
+		}
 
 		return array(
-			'attachment_id' => $attachment_id,
-			'url'           => (string) wp_get_attachment_url( $attachment_id ),
-			'mime_type'     => (string) get_post_mime_type( $attachment_id ),
-			'hash'          => (string) get_post_meta( $post_id, self::META_HASH, true ),
-			'provider'      => (string) get_post_meta( $post_id, self::META_PROVIDER, true ),
-			'voice'         => (string) get_post_meta( $post_id, self::META_VOICE, true ),
-			'characters'    => (int) get_post_meta( $post_id, self::META_CHARACTERS, true ),
-			'duration'      => '' === $duration ? null : (float) $duration,
-			'generated'     => (string) get_post_meta( $post_id, self::META_GENERATED, true ),
-			'byte_length'   => $this->byte_length( $attachment_id ),
-			'is_stale'      => $this->is_stale( $post_id ),
+			'attachment_id'      => $attachment_id,
+			'url'                => (string) wp_get_attachment_url( $attachment_id ),
+			'mime_type'          => (string) get_post_mime_type( $attachment_id ),
+			'hash'               => (string) get_post_meta( $post_id, self::META_HASH, true ),
+			'provider'           => (string) get_post_meta( $post_id, self::META_PROVIDER, true ),
+			'voice'              => (string) get_post_meta( $post_id, self::META_VOICE, true ),
+			'characters'         => (int) get_post_meta( $post_id, self::META_CHARACTERS, true ),
+			'duration'           => $duration,
+			'duration_formatted' => $this->format_duration( $duration, $attachment_meta ),
+			'generated'          => (string) get_post_meta( $post_id, self::META_GENERATED, true ),
+			'byte_length'        => $this->byte_length( $attachment_id ),
+			'is_stale'           => $this->is_stale( $post_id ),
 		);
+	}
+
+	/**
+	 * Human-readable duration, as podcast clients expect it.
+	 *
+	 * @param float|null $duration        Duration in seconds, when known.
+	 * @param array      $attachment_meta Attachment metadata from getID3.
+	 * @return string Empty string when the duration is unknown.
+	 */
+	private function format_duration( ?float $duration, array $attachment_meta ): string {
+		if ( ! empty( $attachment_meta['length_formatted'] ) ) {
+			return (string) $attachment_meta['length_formatted'];
+		}
+
+		if ( null === $duration || $duration <= 0 ) {
+			return '';
+		}
+
+		$seconds = (int) round( $duration );
+		$hours   = intdiv( $seconds, HOUR_IN_SECONDS );
+		$minutes = intdiv( $seconds % HOUR_IN_SECONDS, MINUTE_IN_SECONDS );
+		$rest    = $seconds % MINUTE_IN_SECONDS;
+
+		return $hours > 0
+			? sprintf( '%d:%02d:%02d', $hours, $minutes, $rest )
+			: sprintf( '%d:%02d', $minutes, $rest );
 	}
 
 	/**
@@ -219,7 +259,12 @@ class Narration_Store {
 			return $attachment_id;
 		}
 
+		// media.php supplies wp_read_audio_metadata(), which is what extracts
+		// the duration via getID3. It is not loaded in cron or REST contexts,
+		// and without it the generated metadata silently lacks a length.
 		require_once ABSPATH . 'wp-admin/includes/image.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+
 		wp_update_attachment_metadata(
 			$attachment_id,
 			wp_generate_attachment_metadata( $attachment_id, $upload['file'] )

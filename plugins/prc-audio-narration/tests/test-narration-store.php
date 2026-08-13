@@ -106,7 +106,7 @@ class NarrationStoreTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A duration is optional and stored as null when unknown.
+	 * A duration is null when neither the provider nor the file supplies one.
 	 */
 	public function test_duration_may_be_absent() {
 		$post_id = $this->make_post();
@@ -114,6 +114,75 @@ class NarrationStoreTest extends WP_UnitTestCase {
 		$this->store->store( $post_id, 'AUDIO', array( 'duration' => null ) );
 
 		$this->assertNull( $this->store->get( $post_id )['duration'] );
+		$this->assertSame( '', $this->store->get( $post_id )['duration_formatted'] );
+	}
+
+	/**
+	 * Duration falls back to what WordPress extracted from the file.
+	 *
+	 * ElevenLabs does not report a duration, so without this fallback the
+	 * field would be permanently empty -- and the podcast feed needs it.
+	 * getID3 already computes it when the file is attached, which is more
+	 * trustworthy than deriving it from byte length.
+	 */
+	public function test_duration_falls_back_to_attachment_metadata() {
+		$post_id       = $this->make_post();
+		$attachment_id = $this->store->store( $post_id, 'AUDIO', array( 'duration' => null ) );
+
+		wp_update_attachment_metadata(
+			$attachment_id,
+			array(
+				'length'           => 716,
+				'length_formatted' => '11:56',
+				'mime_type'        => 'audio/mpeg',
+			)
+		);
+
+		$record = $this->store->get( $post_id );
+
+		$this->assertEqualsWithDelta( 716.0, $record['duration'], 0.001 );
+		$this->assertEquals( '11:56', $record['duration_formatted'] );
+	}
+
+	/**
+	 * A provider-reported duration wins over the extracted one.
+	 */
+	public function test_provider_duration_takes_precedence() {
+		$post_id       = $this->make_post();
+		$attachment_id = $this->store->store( $post_id, 'AUDIO', array( 'duration' => 120.5 ) );
+
+		wp_update_attachment_metadata( $attachment_id, array( 'length' => 716 ) );
+
+		$this->assertEqualsWithDelta( 120.5, $this->store->get( $post_id )['duration'], 0.001 );
+	}
+
+	/**
+	 * Duration is formatted for podcast clients when the file lacks a string.
+	 *
+	 * @dataProvider duration_format_provider
+	 *
+	 * @param float  $seconds  Duration in seconds.
+	 * @param string $expected Expected formatting.
+	 */
+	public function test_duration_formatting( $seconds, $expected ) {
+		$post_id = $this->make_post();
+		$this->store->store( $post_id, 'AUDIO', array( 'duration' => $seconds ) );
+
+		$this->assertEquals( $expected, $this->store->get( $post_id )['duration_formatted'] );
+	}
+
+	/**
+	 * Durations and their expected rendering.
+	 *
+	 * @return array<string, array{0: float, 1: string}>
+	 */
+	public function duration_format_provider() {
+		return array(
+			'under a minute' => array( 45.0, '0:45' ),
+			'minutes'        => array( 716.0, '11:56' ),
+			'rounds up'      => array( 716.6, '11:57' ),
+			'over an hour'   => array( 3725.0, '1:02:05' ),
+		);
 	}
 
 	/**
