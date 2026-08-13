@@ -323,6 +323,90 @@ class ElevenLabsProviderTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The ceiling follows the configured model.
+	 *
+	 * ElevenLabs sets this per model, from 5,000 to 40,000. Using one flat
+	 * number would chunk a 40,000-character model eight times more finely
+	 * than it needs, and every extra chunk is another audible seam risk.
+	 *
+	 * @dataProvider model_ceiling_provider
+	 *
+	 * @param string $model    Model identifier.
+	 * @param int    $expected Expected ceiling.
+	 */
+	public function test_max_characters_follows_model( $model, $expected ) {
+		update_option(
+			Settings::OPTION_KEY,
+			array(
+				'api_key'  => 'option-key',
+				'voice_id' => 'default-voice',
+				'model_id' => $model,
+			)
+		);
+
+		$provider = new ElevenLabs_Provider( new Fake_HTTP_Client(), 'test-key' );
+
+		$this->assertEquals( $expected, $provider->get_max_characters() );
+	}
+
+	/**
+	 * Model ceilings as reported by the ElevenLabs /v1/models endpoint.
+	 *
+	 * @return array<string, array{0: string, 1: int}>
+	 */
+	public function model_ceiling_provider() {
+		return array(
+			'v3'              => array( 'eleven_v3', 5000 ),
+			'multilingual v2' => array( 'eleven_multilingual_v2', 10000 ),
+			'turbo v2'        => array( 'eleven_turbo_v2', 30000 ),
+			'flash v2'        => array( 'eleven_flash_v2', 30000 ),
+			'turbo v2.5'      => array( 'eleven_turbo_v2_5', 40000 ),
+			'flash v2.5'      => array( 'eleven_flash_v2_5', 40000 ),
+		);
+	}
+
+	/**
+	 * An unknown model falls back to the conservative default.
+	 *
+	 * Undershooting costs an extra seam; overshooting fails the whole chunk.
+	 */
+	public function test_unknown_model_uses_conservative_default() {
+		update_option(
+			Settings::OPTION_KEY,
+			array(
+				'api_key'  => 'option-key',
+				'voice_id' => 'default-voice',
+				'model_id' => 'eleven_some_future_model',
+			)
+		);
+
+		$provider = new ElevenLabs_Provider( new Fake_HTTP_Client(), 'test-key' );
+
+		$this->assertEquals( ElevenLabs_Provider::DEFAULT_MAX_CHARACTERS, $provider->get_max_characters() );
+	}
+
+	/**
+	 * The ceiling filter receives the model it is overriding.
+	 */
+	public function test_max_characters_filter_receives_model() {
+		$seen = null;
+
+		add_filter(
+			'prc_audio_narration_elevenlabs_max_characters',
+			function ( $ceiling, $model ) use ( &$seen ) {
+				$seen = $model;
+				return $ceiling;
+			},
+			10,
+			2
+		);
+
+		( new ElevenLabs_Provider( new Fake_HTTP_Client(), 'test-key' ) )->get_max_characters();
+
+		$this->assertEquals( 'eleven_multilingual_v2', $seen );
+	}
+
+	/**
 	 * A nonsensical filtered ceiling falls back to the default.
 	 */
 	public function test_max_characters_rejects_non_positive_filter() {

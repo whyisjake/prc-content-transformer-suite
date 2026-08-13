@@ -27,13 +27,32 @@ class ElevenLabs_Provider implements TTS_Provider_Interface {
 	const API_BASE = 'https://api.elevenlabs.io/v1';
 
 	/**
-	 * Default characters accepted in a single request.
+	 * Per-request character ceiling by model, from the ElevenLabs /v1/models
+	 * endpoint.
 	 *
-	 * ElevenLabs enforces a per-request character ceiling that varies by
-	 * model. This default is deliberately conservative and filterable, since
-	 * exceeding it fails the whole chunk.
+	 * The ceiling is a property of the model, not of the API, and the spread
+	 * is wide -- 5,000 to 40,000. Treating it as one flat number forces far
+	 * more requests than a model actually needs, and every extra request is
+	 * another chunk boundary the listener can potentially hear.
+	 *
+	 * Models absent from this map fall back to DEFAULT_MAX_CHARACTERS.
 	 */
-	const DEFAULT_MAX_CHARACTERS = 4500;
+	const MODEL_MAX_CHARACTERS = array(
+		'eleven_v3'              => 5000,
+		'eleven_multilingual_v2' => 10000,
+		'eleven_turbo_v2'        => 30000,
+		'eleven_flash_v2'        => 30000,
+		'eleven_turbo_v2_5'      => 40000,
+		'eleven_flash_v2_5'      => 40000,
+	);
+
+	/**
+	 * Ceiling used for models this plugin does not know about.
+	 *
+	 * Deliberately conservative: exceeding a model's real limit fails the
+	 * whole chunk, while undershooting only costs an extra seam.
+	 */
+	const DEFAULT_MAX_CHARACTERS = 5000;
 
 	/**
 	 * Default cost per character in USD.
@@ -106,12 +125,16 @@ class ElevenLabs_Provider implements TTS_Provider_Interface {
 	 * @return int
 	 */
 	public function get_max_characters(): int {
+		$model   = Settings::model_id();
+		$ceiling = self::MODEL_MAX_CHARACTERS[ $model ] ?? self::DEFAULT_MAX_CHARACTERS;
+
 		/**
 		 * Filter the ElevenLabs per-request character ceiling.
 		 *
-		 * @param int $max_characters The default ceiling.
+		 * @param int    $ceiling The ceiling for the configured model.
+		 * @param string $model   The configured model identifier.
 		 */
-		$max = (int) apply_filters( 'prc_audio_narration_elevenlabs_max_characters', self::DEFAULT_MAX_CHARACTERS );
+		$max = (int) apply_filters( 'prc_audio_narration_elevenlabs_max_characters', $ceiling, $model );
 
 		return $max > 0 ? $max : self::DEFAULT_MAX_CHARACTERS;
 	}

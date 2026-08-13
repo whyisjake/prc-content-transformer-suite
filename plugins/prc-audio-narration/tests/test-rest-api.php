@@ -237,8 +237,14 @@ class RestApiTest extends WP_UnitTestCase {
 
 	/**
 	 * Generation without a configured provider is refused with a clear error.
+	 *
+	 * The provider list is emptied through its own filter rather than relying
+	 * on the environment having no API key. A developer machine with a real
+	 * key configured would otherwise see this test fail for the wrong reason.
 	 */
 	public function test_generate_without_provider_is_rejected() {
+		add_filter( 'prc_audio_narration_tts_providers', '__return_empty_array' );
+
 		wp_set_current_user( $this->editor );
 		$post_id = $this->make_post();
 

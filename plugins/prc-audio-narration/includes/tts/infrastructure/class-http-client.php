@@ -17,9 +17,11 @@ class HTTP_Client implements HTTP_Client_Interface {
 	 *
 	 * Speech synthesis of a long chunk routinely exceeds the WordPress default
 	 * of five seconds, and a timeout mid-job costs a real API charge for audio
-	 * that is then discarded.
+	 * that is then discarded. Chunks are sized to the model's character
+	 * ceiling, which reaches 40,000 on the flash and turbo models -- hours of
+	 * audio in a single request -- so this is generous by design.
 	 */
-	const DEFAULT_TIMEOUT = 120;
+	const DEFAULT_TIMEOUT = 300;
 
 	/**
 	 * Send a GET request.
@@ -50,10 +52,17 @@ class HTTP_Client implements HTTP_Client_Interface {
 	 * @return array
 	 */
 	private function prepare_args( array $args ): array {
+		/**
+		 * Filter the request timeout for speech synthesis calls.
+		 *
+		 * @param int $timeout Timeout in seconds.
+		 */
+		$timeout = (int) apply_filters( 'prc_audio_narration_http_timeout', self::DEFAULT_TIMEOUT );
+
 		return wp_parse_args(
 			$args,
 			array(
-				'timeout' => self::DEFAULT_TIMEOUT,
+				'timeout' => $timeout > 0 ? $timeout : self::DEFAULT_TIMEOUT,
 			)
 		);
 	}

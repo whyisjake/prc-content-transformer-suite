@@ -42,9 +42,27 @@ class SettingsTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Skip a test whose premise is that no key constant is defined.
+	 *
+	 * Constants cannot be undefined once set, and a developer environment may
+	 * legitimately have a real key configured. Rather than asserting against
+	 * whatever the ambient environment happens to be, the option-precedence
+	 * tests run only when no constant is present, and the constant-precedence
+	 * test runs only when one is. Both paths stay covered; neither depends on
+	 * the machine.
+	 */
+	private function require_no_constant() {
+		if ( Settings::api_key_is_constant() ) {
+			$this->markTestSkipped( 'A key constant is defined in this environment; it correctly takes precedence.' );
+		}
+	}
+
+	/**
 	 * The stored option supplies the key when no constant is defined.
 	 */
 	public function test_resolves_key_from_option() {
+		$this->require_no_constant();
+
 		update_option( Settings::OPTION_KEY, array( 'api_key' => 'from-option' ) );
 
 		$this->assertEquals( 'from-option', Settings::resolve_api_key() );
@@ -54,6 +72,8 @@ class SettingsTest extends WP_UnitTestCase {
 	 * An unconfigured site resolves to an empty key rather than erroring.
 	 */
 	public function test_resolves_empty_when_unconfigured() {
+		$this->require_no_constant();
+
 		$this->assertSame( '', Settings::resolve_api_key() );
 		$this->assertFalse( Settings::api_key_is_constant() );
 	}
@@ -62,9 +82,30 @@ class SettingsTest extends WP_UnitTestCase {
 	 * Whitespace-only stored keys are treated as unconfigured.
 	 */
 	public function test_whitespace_key_is_not_configured() {
+		$this->require_no_constant();
+
 		update_option( Settings::OPTION_KEY, array( 'api_key' => '   ' ) );
 
 		$this->assertSame( '', Settings::resolve_api_key() );
+	}
+
+	/**
+	 * A constant beats the stored option.
+	 *
+	 * This is the security-relevant half of the contract: a server-level key
+	 * must not be overridable from wp-admin.
+	 */
+	public function test_constant_wins_over_option() {
+		if ( ! Settings::api_key_is_constant() ) {
+			$this->markTestSkipped( 'No key constant is defined in this environment.' );
+		}
+
+		update_option( Settings::OPTION_KEY, array( 'api_key' => 'from-option' ) );
+
+		$resolved = Settings::resolve_api_key();
+
+		$this->assertNotEquals( 'from-option', $resolved );
+		$this->assertNotSame( '', $resolved );
 	}
 
 	/**
