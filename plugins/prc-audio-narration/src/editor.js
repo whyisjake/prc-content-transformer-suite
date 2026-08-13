@@ -18,6 +18,7 @@ import {
 	Flex,
 	FlexItem,
 	Notice,
+	SelectControl,
 	Spinner,
 	__experimentalHStack as HStack,
 	__experimentalText as Text,
@@ -57,6 +58,8 @@ function NarrationPanel() {
 	);
 
 	const [ data, setData ] = useState( null );
+	const [ voices, setVoices ] = useState( [] );
+	const [ voiceOverride, setVoiceOverride ] = useState( '' );
 	const [ busy, setBusy ] = useState( false );
 	const [ estimate, setEstimate ] = useState( null );
 	const [ error, setError ] = useState( null );
@@ -93,6 +96,10 @@ function NarrationPanel() {
 	useEffect( () => {
 		if ( postId && ! isNewPost ) {
 			load();
+
+			apiFetch( { path: `${ NAMESPACE }/voices` } )
+				.then( ( result ) => setVoices( result.voices || [] ) )
+				.catch( () => setVoices( [] ) );
 		}
 		return stopPolling;
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +129,15 @@ function NarrationPanel() {
 		setBusy( true );
 		setError( null );
 
-		apiFetch( { path, method } )
+		apiFetch( {
+			path,
+			method,
+			// Only sent when the editor picked one; otherwise the site default
+			// applies and is resolved server-side.
+			...( 'POST' === method && voiceOverride
+				? { data: { voice_id: voiceOverride } }
+				: {} ),
+		} )
 			.then( ( next ) => {
 				setData( next );
 				setEstimate( null );
@@ -149,6 +164,34 @@ function NarrationPanel() {
 
 	const { state, narration } = data;
 	const pending = 'pending' === state;
+
+	/**
+	 * Resolve a voice identifier to its name.
+	 *
+	 * The stored value is an opaque provider ID, which tells a reader
+	 * nothing. Fall back to the raw value if the list has not loaded.
+	 *
+	 * @param {string} id Voice identifier.
+	 * @return {string} Display name.
+	 */
+	const voiceName = ( id ) => {
+		if ( ! id ) {
+			return __( 'site default', 'prc-audio-narration' );
+		}
+		const match = voices.find( ( voice ) => voice.id === id );
+		return match ? match.name : id;
+	};
+
+	const voiceOptions = [
+		{
+			value: '',
+			label: __( 'Site default', 'prc-audio-narration' ),
+		},
+		...voices.map( ( voice ) => ( {
+			value: voice.id,
+			label: voice.name,
+		} ) ),
+	];
 
 	return (
 		<VStack spacing={ 3 }>
@@ -193,14 +236,29 @@ function NarrationPanel() {
 					/>
 					<Text variant="muted">
 						{ sprintf(
-							/* translators: 1: duration, 2: voice identifier */
-							__( '%1$s · voice %2$s', 'prc-audio-narration' ),
+							/* translators: 1: duration, 2: voice name */
+							__( '%1$s · read by %2$s', 'prc-audio-narration' ),
 							narration.duration_formatted ||
 								__( 'unknown length', 'prc-audio-narration' ),
-							narration.voice || '—'
+							voiceName( narration.voice )
 						) }
 					</Text>
 				</VStack>
+			) }
+
+			{ voices.length > 0 && (
+				<SelectControl
+					__nextHasNoMarginBottom
+					label={ __( 'Voice', 'prc-audio-narration' ) }
+					help={ __(
+						'Applies the next time you generate.',
+						'prc-audio-narration'
+					) }
+					value={ voiceOverride }
+					options={ voiceOptions }
+					disabled={ busy || pending }
+					onChange={ setVoiceOverride }
+				/>
 			) }
 
 			{ estimate && ! estimate.error && (

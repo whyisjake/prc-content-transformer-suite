@@ -145,7 +145,12 @@ class REST_API {
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_voices' ),
-				'permission_callback' => array( $this, 'can_manage' ),
+				// Deliberately a lower bar than the settings routes. The editor
+				// panel offers a per-post voice override, and an editor who can
+				// narrate a post needs the list to choose from. Voice names are
+				// not sensitive; the API key they are fetched with is never
+				// exposed.
+				'permission_callback' => array( $this, 'can_choose_voice' ),
 			)
 		);
 	}
@@ -160,6 +165,23 @@ class REST_API {
 			return new \WP_Error(
 				'prc_audio_narration_forbidden',
 				'You are not allowed to manage narration settings.',
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Whether the current user may see the voice list.
+	 *
+	 * @return bool|\WP_Error
+	 */
+	public function can_choose_voice() {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return new \WP_Error(
+				'prc_audio_narration_forbidden',
+				'You are not allowed to view narration voices.',
 				array( 'status' => rest_authorization_required_code() )
 			);
 		}

@@ -20,6 +20,7 @@ import {
 	SelectControl,
 	Spinner,
 	TextControl,
+	__experimentalDivider as Divider,
 	__experimentalHeading as Heading,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
@@ -28,40 +29,30 @@ import {
 const NAMESPACE = '/prc-audio-narration/v1';
 
 /**
- * Describe where the active key comes from, so an admin editing a field that
- * is being overridden by a constant is told rather than left confused.
+ * Stand-in shown in place of a configured key.
  *
- * @param {string} source One of constant, connector, option, none.
- * @return {{status: string, message: string}|null} Notice content.
+ * The real key is never sent to the browser, so this is decoration that
+ * signals "something is set" rather than a truncation of the actual value.
  */
-function keySourceNotice( source ) {
+const KEY_MASK = '••••••••••••••••••••';
+
+/**
+ * Short note explaining where a configured key comes from.
+ *
+ * Shown as field help rather than a notice: the fact is about this input, and
+ * an admin who can see the field is disabled mostly needs to know why.
+ *
+ * @param {string} source One of constant, connector, option.
+ * @return {string} Help text.
+ */
+function keySourceHelp( source ) {
 	switch ( source ) {
 		case 'constant':
-			return {
-				status: 'info',
-				message: __(
-					'The API key is set by a server constant. It takes precedence over anything entered here.',
-					'prc-audio-narration'
-				),
-			};
+			return __( 'Set by a server constant.', 'prc-audio-narration' );
 		case 'connector':
-			return {
-				status: 'info',
-				message: __(
-					'The API key comes from the AI connectors screen. It takes precedence over the field below.',
-					'prc-audio-narration'
-				),
-			};
-		case 'none':
-			return {
-				status: 'warning',
-				message: __(
-					'No API key is configured. Narration cannot be generated until one is set.',
-					'prc-audio-narration'
-				),
-			};
+			return __( 'Set on the AI connectors screen.', 'prc-audio-narration' );
 		default:
-			return null;
+			return __( 'Saved on this site.', 'prc-audio-narration' );
 	}
 }
 
@@ -69,6 +60,7 @@ function SettingsPage() {
 	const [ settings, setSettings ] = useState( null );
 	const [ voices, setVoices ] = useState( [] );
 	const [ apiKey, setApiKey ] = useState( '' );
+	const [ replacingKey, setReplacingKey ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
 
@@ -111,6 +103,7 @@ function SettingsPage() {
 			.then( ( updated ) => {
 				setSettings( updated );
 				setApiKey( '' );
+				setReplacingKey( false );
 				setNotice( {
 					status: 'success',
 					message: __( 'Settings saved.', 'prc-audio-narration' ),
@@ -122,7 +115,11 @@ function SettingsPage() {
 			.finally( () => setSaving( false ) );
 	};
 
-	const sourceNotice = keySourceNotice( settings.key_source );
+	// A key can be present without being editable here: constants and the
+	// connectors screen both win over the stored option.
+	const hasKey = settings.has_key;
+	const keyLocked = 'constant' === settings.key_source || 'connector' === settings.key_source;
+	const showMaskedKey = hasKey && ! replacingKey;
 
 	const voiceOptions = [
 		{ value: '', label: __( 'Select a voice…', 'prc-audio-narration' ) },
@@ -146,6 +143,20 @@ function SettingsPage() {
 
 	return (
 		<VStack spacing={ 4 }>
+			<VStack spacing={ 1 }>
+				<Heading level={ 2 }>
+					{ __( 'Audio Narration', 'prc-audio-narration' ) }
+				</Heading>
+				<Text variant="muted">
+					{ __(
+						'Choose the voice and model used to read articles aloud. Narration is generated only when an editor asks for it, because speech synthesis is billed per character.',
+						'prc-audio-narration'
+					) }
+				</Text>
+			</VStack>
+
+			<Divider margin={ 0 } />
+
 			{ notice && (
 				<Notice
 					status={ notice.status }
@@ -155,9 +166,12 @@ function SettingsPage() {
 				</Notice>
 			) }
 
-			{ sourceNotice && (
-				<Notice status={ sourceNotice.status } isDismissible={ false }>
-					{ sourceNotice.message }
+			{ ! hasKey && (
+				<Notice status="warning" isDismissible={ false }>
+					{ __(
+						'No API key is configured. Narration cannot be generated until one is set.',
+						'prc-audio-narration'
+					) }
 				</Notice>
 			) }
 
@@ -169,26 +183,67 @@ function SettingsPage() {
 				</CardHeader>
 				<CardBody>
 					<VStack spacing={ 4 }>
-						<TextControl
-							__nextHasNoMarginBottom
-							type="password"
-							autoComplete="off"
-							label={ __( 'ElevenLabs API key', 'prc-audio-narration' ) }
-							help={
-								settings.key_locked
-									? __(
-											'Overridden by a server constant.',
+						{ showMaskedKey ? (
+							<Flex align="flex-end" gap={ 3 } justify="flex-start">
+								<FlexItem style={ { flexGrow: 1 } }>
+									<TextControl
+										__nextHasNoMarginBottom
+										readOnly
+										disabled
+										label={ __(
+											'ElevenLabs API key',
 											'prc-audio-narration'
-									  )
-									: __(
-											'Leave blank to keep the saved key.',
+										) }
+										help={ keySourceHelp( settings.key_source ) }
+										value={ KEY_MASK }
+										onChange={ () => {} }
+									/>
+								</FlexItem>
+								{ ! keyLocked && (
+									<FlexItem>
+										<Button
+											variant="secondary"
+											onClick={ () => setReplacingKey( true ) }
+										>
+											{ __( 'Replace', 'prc-audio-narration' ) }
+										</Button>
+									</FlexItem>
+								) }
+							</Flex>
+						) : (
+							<Flex align="flex-end" gap={ 3 } justify="flex-start">
+								<FlexItem style={ { flexGrow: 1 } }>
+									<TextControl
+										__nextHasNoMarginBottom
+										type="password"
+										autoComplete="off"
+										label={ __(
+											'ElevenLabs API key',
 											'prc-audio-narration'
-									  )
-							}
-							value={ apiKey }
-							disabled={ settings.key_locked }
-							onChange={ setApiKey }
-						/>
+										) }
+										help={ __(
+											'Saved when you save settings. It is never shown again.',
+											'prc-audio-narration'
+										) }
+										value={ apiKey }
+										onChange={ setApiKey }
+									/>
+								</FlexItem>
+								{ replacingKey && (
+									<FlexItem>
+										<Button
+											variant="tertiary"
+											onClick={ () => {
+												setReplacingKey( false );
+												setApiKey( '' );
+											} }
+										>
+											{ __( 'Cancel', 'prc-audio-narration' ) }
+										</Button>
+									</FlexItem>
+								) }
+							</Flex>
+						) }
 
 						<SelectControl
 							__nextHasNoMarginBottom
@@ -245,12 +300,11 @@ function SettingsPage() {
 						) }
 
 						<Text variant="muted">
-							{ __(
-								'Narration is only generated when an editor asks for it, because speech synthesis is billed per character.',
-								'prc-audio-narration'
-							) }{ ' ' }
 							<ExternalLink href="https://elevenlabs.io/app/voice-library">
-								{ __( 'Browse voices', 'prc-audio-narration' ) }
+								{ __(
+									'Browse the full voice library',
+									'prc-audio-narration'
+								) }
 							</ExternalLink>
 						</Text>
 					</VStack>

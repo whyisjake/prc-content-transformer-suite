@@ -222,14 +222,40 @@ class SettingsRestTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The voices route is capability gated.
+	 * Editors can read the voice list.
+	 *
+	 * The panel offers a per-post voice override, so someone who can narrate
+	 * a post needs the list to choose from. It is a deliberately lower bar
+	 * than the settings routes.
 	 */
-	public function test_voices_route_is_gated() {
+	public function test_editor_can_read_voices() {
 		wp_set_current_user( $this->editor );
 
 		$request = new WP_REST_Request( 'GET', '/' . REST_API::NAMESPACE_V1 . '/voices' );
 
+		$this->assertEquals( 200, rest_get_server()->dispatch( $request )->get_status() );
+	}
+
+	/**
+	 * Users who cannot edit posts are refused the voice list.
+	 */
+	public function test_subscriber_cannot_read_voices() {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+
+		$request = new WP_REST_Request( 'GET', '/' . REST_API::NAMESPACE_V1 . '/voices' );
+
 		$this->assertEquals( 403, rest_get_server()->dispatch( $request )->get_status() );
+	}
+
+	/**
+	 * The voice list still requires authentication.
+	 */
+	public function test_voices_requires_authentication() {
+		wp_set_current_user( 0 );
+
+		$request = new WP_REST_Request( 'GET', '/' . REST_API::NAMESPACE_V1 . '/voices' );
+
+		$this->assertEquals( 401, rest_get_server()->dispatch( $request )->get_status() );
 	}
 
 	/**

@@ -317,7 +317,8 @@ class Settings {
 
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Audio Narration', 'prc-audio-narration' ); ?></h1>
+			<?php // The visible heading is rendered by the app; this keeps an h1 for screen readers and for where WordPress injects admin notices. ?>
+			<h1 class="screen-reader-text"><?php esc_html_e( 'Audio Narration', 'prc-audio-narration' ); ?></h1>
 			<div id="prc-audio-narration-settings"></div>
 			<noscript>
 				<p><?php esc_html_e( 'Audio narration settings require JavaScript.', 'prc-audio-narration' ); ?></p>
