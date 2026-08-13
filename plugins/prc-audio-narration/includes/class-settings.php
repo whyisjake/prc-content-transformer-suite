@@ -64,8 +64,64 @@ class Settings {
 				'voice_id' => '',
 				'model_id' => self::DEFAULT_MODEL,
 			),
+			self::podcast_defaults(),
 			$stored
 		);
+	}
+
+	/**
+	 * Podcast channel defaults, derived from the site.
+	 *
+	 * Chosen so the feed is valid and submittable without anyone visiting the
+	 * settings screen first. An empty channel title or missing owner email
+	 * fails validation outright at Apple, which is a poor first experience for
+	 * a feature that otherwise works.
+	 *
+	 * @return array
+	 */
+	public static function podcast_defaults(): array {
+		return array(
+			'podcast_title'       => '',
+			'podcast_description' => '',
+			'podcast_author'      => '',
+			'podcast_owner_email' => '',
+			'podcast_category'    => 'News',
+			'podcast_explicit'    => 'false',
+			'podcast_image'       => '',
+			'podcast_language'    => '',
+		);
+	}
+
+	/**
+	 * Resolve a podcast channel field, falling back to site data.
+	 *
+	 * @param string $field Field key without the podcast_ prefix.
+	 * @return string
+	 */
+	public static function podcast( string $field ): string {
+		$value = trim( (string) self::get( 'podcast_' . $field, '' ) );
+
+		if ( '' !== $value ) {
+			return $value;
+		}
+
+		switch ( $field ) {
+			case 'title':
+				return (string) get_bloginfo( 'name' );
+			case 'description':
+				return (string) get_bloginfo( 'description' );
+			case 'author':
+				return (string) get_bloginfo( 'name' );
+			case 'owner_email':
+				return (string) get_option( 'admin_email', '' );
+			case 'language':
+				return (string) get_bloginfo( 'language' );
+			case 'image':
+				$icon = get_site_icon_url( 1400 );
+				return $icon ? $icon : '';
+			default:
+				return '';
+		}
 	}
 
 	/**
@@ -249,13 +305,29 @@ class Settings {
 			$api_key = (string) $existing['api_key'];
 		}
 
-		return array(
+		$sanitized = array(
 			'api_key'  => $api_key,
 			'voice_id' => isset( $input['voice_id'] ) ? sanitize_text_field( $input['voice_id'] ) : '',
 			'model_id' => isset( $input['model_id'] ) && '' !== $input['model_id']
 				? sanitize_text_field( $input['model_id'] )
 				: self::DEFAULT_MODEL,
 		);
+
+		foreach ( array_keys( self::podcast_defaults() ) as $key ) {
+			if ( ! isset( $input[ $key ] ) ) {
+				$sanitized[ $key ] = (string) ( $existing[ $key ] ?? '' );
+				continue;
+			}
+
+			$sanitized[ $key ] = 'podcast_image' === $key
+				? esc_url_raw( $input[ $key ] )
+				: sanitize_text_field( $input[ $key ] );
+		}
+
+		// Only the two literal strings Apple accepts.
+		$sanitized['podcast_explicit'] = 'true' === $sanitized['podcast_explicit'] ? 'true' : 'false';
+
+		return $sanitized;
 	}
 
 	/**

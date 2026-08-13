@@ -134,6 +134,9 @@ class REST_API {
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
+						'podcast'  => array(
+							'type' => 'object',
+						),
 					),
 				),
 			)
@@ -206,14 +209,27 @@ class REST_API {
 			);
 		}
 
+		$podcast = array();
+		foreach ( array_keys( Settings::podcast_defaults() ) as $key ) {
+			$podcast[ $key ] = (string) Settings::get( $key, '' );
+		}
+
 		return rest_ensure_response(
 			array(
-				'voice_id'    => Settings::get( 'voice_id', '' ),
-				'model_id'    => Settings::model_id(),
-				'models'      => $models,
-				'has_key'     => '' !== Settings::resolve_api_key(),
-				'key_source'  => $this->key_source(),
-				'key_locked'  => Settings::api_key_is_constant(),
+				'voice_id'          => Settings::get( 'voice_id', '' ),
+				'model_id'          => Settings::model_id(),
+				'models'            => $models,
+				'has_key'           => '' !== Settings::resolve_api_key(),
+				'key_source'        => $this->key_source(),
+				'key_locked'        => Settings::api_key_is_constant(),
+				'podcast'           => $podcast,
+				'podcast_resolved'  => array(
+					'title'       => Settings::podcast( 'title' ),
+					'author'      => Settings::podcast( 'author' ),
+					'owner_email' => Settings::podcast( 'owner_email' ),
+					'image'       => Settings::podcast( 'image' ),
+				),
+				'podcast_feed_url'  => Podcast_Feed::url(),
 			)
 		);
 	}
@@ -248,6 +264,19 @@ class REST_API {
 			if ( null !== $request->get_param( $field ) ) {
 				$settings[ $field ] = (string) $request->get_param( $field );
 			}
+		}
+
+		$podcast = $request->get_param( 'podcast' );
+		if ( is_array( $podcast ) ) {
+			foreach ( array_keys( Settings::podcast_defaults() ) as $key ) {
+				if ( isset( $podcast[ $key ] ) ) {
+					$settings[ $key ] = 'podcast_image' === $key
+						? esc_url_raw( (string) $podcast[ $key ] )
+						: sanitize_text_field( (string) $podcast[ $key ] );
+				}
+			}
+
+			$settings['podcast_explicit'] = 'true' === ( $settings['podcast_explicit'] ?? '' ) ? 'true' : 'false';
 		}
 
 		// An omitted or blank key leaves the stored one alone, so saving the

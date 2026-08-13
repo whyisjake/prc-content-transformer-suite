@@ -56,6 +56,28 @@ function keySourceHelp( source ) {
 	}
 }
 
+/**
+ * Help text naming the value a blank field will fall back to.
+ *
+ * Only shown while the field is empty; repeating the fallback next to a
+ * filled-in field reads as though the entered value is being ignored.
+ *
+ * @param {string} value    Current field value.
+ * @param {string} fallback Value used when the field is blank.
+ * @return {string|undefined} Help text, or undefined when the field is set.
+ */
+function fallbackHelp( value, fallback ) {
+	if ( value || ! fallback ) {
+		return undefined;
+	}
+
+	return sprintf(
+		/* translators: %s: fallback value */
+		__( 'Defaults to %s.', 'prc-audio-narration' ),
+		fallback
+	);
+}
+
 function SettingsPage() {
 	const [ settings, setSettings ] = useState( null );
 	const [ voices, setVoices ] = useState( [] );
@@ -85,6 +107,12 @@ function SettingsPage() {
 		);
 	}
 
+	const setPodcast = ( key, value ) =>
+		setSettings( {
+			...settings,
+			podcast: { ...settings.podcast, [ key ]: value },
+		} );
+
 	const save = () => {
 		setSaving( true );
 		setNotice( null );
@@ -95,6 +123,7 @@ function SettingsPage() {
 			data: {
 				voice_id: settings.voice_id,
 				model_id: settings.model_id,
+				podcast: settings.podcast,
 				// Only sent when the admin actually typed one, so saving the
 				// form does not wipe a stored key.
 				...( apiKey ? { api_key: apiKey } : {} ),
@@ -307,6 +336,112 @@ function SettingsPage() {
 								) }
 							</ExternalLink>
 						</Text>
+					</VStack>
+				</CardBody>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<Heading level={ 3 }>
+						{ __( 'Podcast feed', 'prc-audio-narration' ) }
+					</Heading>
+				</CardHeader>
+				<CardBody>
+					<VStack spacing={ 4 }>
+						<Text variant="muted">
+							{ __( 'Narrated articles are published at', 'prc-audio-narration' ) }{ ' ' }
+							<ExternalLink href={ settings.podcast_feed_url }>
+								{ settings.podcast_feed_url }
+							</ExternalLink>
+						</Text>
+
+						{ ! settings.podcast_resolved.image && (
+							<Notice status="warning" isDismissible={ false }>
+								{ __(
+									'Apple Podcasts requires channel artwork. Add an image URL below, or set a site icon, before submitting the feed.',
+									'prc-audio-narration'
+								) }
+							</Notice>
+						) }
+
+						<TextControl
+							__nextHasNoMarginBottom
+							label={ __( 'Show title', 'prc-audio-narration' ) }
+							help={ fallbackHelp(
+								settings.podcast.podcast_title,
+								settings.podcast_resolved.title
+							) }
+							value={ settings.podcast.podcast_title }
+							onChange={ ( value ) => setPodcast( 'podcast_title', value ) }
+						/>
+
+						<TextControl
+							__nextHasNoMarginBottom
+							label={ __( 'Show description', 'prc-audio-narration' ) }
+							value={ settings.podcast.podcast_description }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_description', value )
+							}
+						/>
+
+						<TextControl
+							__nextHasNoMarginBottom
+							label={ __( 'Author', 'prc-audio-narration' ) }
+							help={ fallbackHelp(
+								settings.podcast.podcast_author,
+								settings.podcast_resolved.author
+							) }
+							value={ settings.podcast.podcast_author }
+							onChange={ ( value ) => setPodcast( 'podcast_author', value ) }
+						/>
+
+						<TextControl
+							__nextHasNoMarginBottom
+							type="email"
+							label={ __( 'Owner email', 'prc-audio-narration' ) }
+							help={ __(
+								'Required by Apple Podcasts. Not shown publicly in most clients.',
+								'prc-audio-narration'
+							) }
+							value={ settings.podcast.podcast_owner_email }
+							onChange={ ( value ) =>
+								setPodcast( 'podcast_owner_email', value )
+							}
+						/>
+
+						<TextControl
+							__nextHasNoMarginBottom
+							type="url"
+							label={ __( 'Artwork URL', 'prc-audio-narration' ) }
+							help={ __(
+								'Square JPEG or PNG, at least 1400 by 1400 pixels.',
+								'prc-audio-narration'
+							) }
+							value={ settings.podcast.podcast_image }
+							onChange={ ( value ) => setPodcast( 'podcast_image', value ) }
+						/>
+
+						<TextControl
+							__nextHasNoMarginBottom
+							label={ __( 'Category', 'prc-audio-narration' ) }
+							help={ __(
+								'An Apple Podcasts category, such as News or Science.',
+								'prc-audio-narration'
+							) }
+							value={ settings.podcast.podcast_category }
+							onChange={ ( value ) => setPodcast( 'podcast_category', value ) }
+						/>
+
+						<SelectControl
+							__nextHasNoMarginBottom
+							label={ __( 'Explicit content', 'prc-audio-narration' ) }
+							value={ settings.podcast.podcast_explicit }
+							options={ [
+								{ value: 'false', label: __( 'No', 'prc-audio-narration' ) },
+								{ value: 'true', label: __( 'Yes', 'prc-audio-narration' ) },
+							] }
+							onChange={ ( value ) => setPodcast( 'podcast_explicit', value ) }
+						/>
 					</VStack>
 				</CardBody>
 			</Card>

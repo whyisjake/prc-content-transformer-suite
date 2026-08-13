@@ -17,9 +17,12 @@ class Plugin_Activator {
 	 * @return void
 	 */
 	public static function activate() {
-		// Narration is stored against existing posts and needs no custom post
-		// type or rewrite rules at activation. The podcast feed registers its
-		// own rewrite rules and flushes them when that module lands.
+		// The podcast feed is registered on init, which has not run yet, so
+		// rewrite rules cannot be flushed here. Flag it instead and let the
+		// feed flush once on the first request after activation.
+		require_once plugin_dir_path( __FILE__ ) . 'class-podcast-feed.php';
+		update_option( Podcast_Feed::FLUSH_FLAG, 1 );
+
 		do_action( 'prc_audio_narration_activated' );
 	}
 }
