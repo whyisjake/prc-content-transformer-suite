@@ -70,6 +70,23 @@ npx @wordpress/env start
 
 The environment will be available at `http://localhost:8888` (admin: `http://localhost:8888/wp-admin`, user/pass: `admin` / `password`).
 
+If those ports are already taken, create a `.wp-env.override.json` (gitignored) with different `port` / `testsPort` values rather than editing `.wp-env.json`.
+
+### Running tests
+
+PHP tests run inside the wp-env test container:
+
+```bash
+# Install the plugin's PHP dependencies once
+cd plugins/prc-audio-narration && composer install && cd ../..
+
+# Start the environment, then run the suite
+npm run env -- start
+npm run test:php
+```
+
+CI runs this same command on every pull request. Only `prc-audio-narration` is wired into that job today — see the comments in `.github/workflows/ci.yml` for what blocks the other plugins' suites from running.
+
 ### API key configuration
 
 `prc-content-transformer` and `prc-pdf-extraction` both need an Anthropic API key. The plugins resolve it in this order:

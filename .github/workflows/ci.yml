@@ -23,3 +23,78 @@ jobs:
             exit 1
           fi
           echo "Credential check passed."
+
+  test:
+    name: PHPUnit (${{ matrix.plugin }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Report every plugin's result rather than stopping at the first red one.
+      fail-fast: false
+      matrix:
+        # Only plugins whose suite actually executes belong here. Adding one
+        # whose tests silently collect zero cases would turn this job into a
+        # green light that proves nothing.
+        #
+        # Not yet included, and why:
+        #   prc-pdf-extraction      - phpunit.xml.dist has no `suffix` attribute,
+        #                             so PHPUnit looks for *Test.php and matches
+        #                             none of its test-*.php files. Reports
+        #                             "No tests executed!" and exits 0.
+        #   prc-markdown-for-agents - tests/bootstrap.php requires
+        #                             prc-pdf-extraction/vendor/autoload.php,
+        #                             so its suite cannot run standalone.
+        #   prc-content-transformer - committed lock file does not install a
+        #                             phpunit binary.
+        #   prc-apple-news          - same as above.
+        plugin:
+          - prc-audio-narration
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Match .wp-env.json so Composer resolves the same dependency set the
+          # tests will actually run against. Resolving for a newer PHP than the
+          # container runs pulls in packages that fail to parse there.
+          php-version: '8.2'
+          tools: composer
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # Deliberately no `npm ci` / `npm install` here. The repo has no
+      # committed package-lock.json, and four plugins declare @prc/components,
+      # which is not resolvable from the public registry. PHP tests need
+      # neither, so wp-env is fetched directly at a pinned version instead of
+      # resolving the JS workspace.
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: plugins/${{ matrix.plugin }}/vendor
+          key: composer-${{ matrix.plugin }}-${{ hashFiles(format('plugins/{0}/composer.json', matrix.plugin)) }}
+          restore-keys: composer-${{ matrix.plugin }}-
+
+      - name: Install plugin dependencies
+        working-directory: plugins/${{ matrix.plugin }}
+        run: composer install --no-interaction --no-progress
+
+      - name: Start WordPress environment
+        run: npm run env -- start
+
+      - name: Run PHPUnit
+        run: |
+          npm run env -- run tests-cli \
+            --env-cwd=wp-content/plugins/${{ matrix.plugin }} \
+            "vendor/bin/phpunit"
+
+      - name: Show environment logs on failure
+        if: failure()
+        run: npm run env -- logs tests --watch=false || true

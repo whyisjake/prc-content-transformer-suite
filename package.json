@@ -22,7 +22,9 @@
 	],
 	"scripts": {
 		"build": "turbo run build",
-		"dev": "turbo run build --watch"
+		"dev": "turbo run build --watch",
+		"env": "npx --yes @wordpress/env@11.13.0",
+		"test:php": "npx --yes @wordpress/env@11.13.0 run tests-cli --env-cwd=wp-content/plugins/prc-audio-narration \"vendor/bin/phpunit\""
 	},
 	"devDependencies": {
 		"turbo": "^2.0.0"
