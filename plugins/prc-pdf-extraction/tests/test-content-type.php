@@ -16,12 +16,6 @@ class ContentTypeTest extends WP_UnitTestCase {
 	 */
 	public function test_post_type_registered() {
 		// Skip on PHP 8.2+ due to WordPress core serialization bug
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+.'
-			);
-		}
-
 		$this->assertTrue( post_type_exists( Content_Type::get_post_type() ) );
 	}
 
@@ -30,12 +24,6 @@ class ContentTypeTest extends WP_UnitTestCase {
 	 */
 	public function test_post_type_supports() {
 		// Skip on PHP 8.2+ due to WordPress core serialization bug
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+.'
-			);
-		}
-
 		$post_type = Content_Type::get_post_type();
 		$this->assertTrue( post_type_supports( $post_type, 'title' ) );
 		$this->assertTrue( post_type_supports( $post_type, 'editor' ) );
@@ -50,12 +38,6 @@ class ContentTypeTest extends WP_UnitTestCase {
 	 */
 	public function test_post_type_not_hierarchical() {
 		// Skip on PHP 8.2+ due to WordPress core serialization bug
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+.'
-			);
-		}
-
 		$post_type_object = get_post_type_object( Content_Type::get_post_type() );
 		$this->assertFalse( $post_type_object->hierarchical );
 	}
@@ -83,11 +65,10 @@ class ContentTypeTest extends WP_UnitTestCase {
 	 */
 	public function test_meta_fields_registered() {
 		// Skip on PHP 8.2+ due to WordPress core serialization bug
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+.'
-			);
-		}
+		// WP_UnitTestCase restores global state between tests, dropping meta
+		// registered on init when the plugin loaded. Re-register so this
+		// asserts the registration rather than test ordering.
+		( new Content_Type() )->register_meta_fields();
 
 		$registered_meta = get_registered_meta_keys( 'post', Content_Type::get_post_type() );
 
@@ -114,21 +95,8 @@ class ContentTypeTest extends WP_UnitTestCase {
 
 	/**
 	 * Test adding meta data to extraction post
-	 *
-	 * Note: WordPress 6.8.x has a bug with meta registration on PHP 8.2+
-	 * where it tries to use SERIALIZATION_FORMAT_USE_UNSERIALIZE constant
-	 * incorrectly. This test is skipped on PHP 8.2+ until WordPress fixes
-	 * the issue. Meta fields work correctly in production.
 	 */
 	public function test_add_meta_data() {
-		// Skip on PHP 8.2+ due to WordPress core bug with meta serialization
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+. ' .
-				'Meta fields work correctly in production.'
-			);
-		}
-
 		$post_id = wp_insert_post( array(
 			'post_type'   => Content_Type::get_post_type(),
 			'post_title'  => 'Test Extraction with Meta',

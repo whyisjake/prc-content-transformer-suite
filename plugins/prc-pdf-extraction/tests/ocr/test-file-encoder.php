@@ -11,24 +11,11 @@ use PRC\Platform\PDF_Extraction\OCR\Infrastructure\File_Encoder;
  * File Encoder tests
  */
 class File_Encoder_Test extends WP_UnitTestCase {
-	/**
-	 * Skip tests that trigger WordPress meta operations on PHP 8.2+
-	 * Due to WordPress core bug with SERIALIZATION_FORMAT_USE_UNSERIALIZE constant
-	 */
-	protected function skip_on_php_82_if_needed() {
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+. ' .
-				'Skipping tests that create posts/users/meta. These features work correctly in production.'
-			);
-		}
-	}
 
 	/**
 	 * Test encoding non-existent file returns false
 	 */
 	public function test_encode_nonexistent_file() {
-		$this->skip_on_php_82_if_needed();
 		$encoder = new File_Encoder();
 		$result  = $encoder->encode_file( '/nonexistent/file.pdf' );
 
@@ -39,7 +26,6 @@ class File_Encoder_Test extends WP_UnitTestCase {
 	 * Test getting MIME type for non-existent file returns false
 	 */
 	public function test_get_mime_type_nonexistent_file() {
-		$this->skip_on_php_82_if_needed();
 		$encoder = new File_Encoder();
 		$result  = $encoder->get_mime_type( '/nonexistent/file.pdf' );
 
@@ -50,7 +36,6 @@ class File_Encoder_Test extends WP_UnitTestCase {
 	 * Test getting file size for non-existent file returns false
 	 */
 	public function test_get_file_size_nonexistent_file() {
-		$this->skip_on_php_82_if_needed();
 		$encoder = new File_Encoder();
 		$result  = $encoder->get_file_size( '/nonexistent/file.pdf' );
 
@@ -61,7 +46,6 @@ class File_Encoder_Test extends WP_UnitTestCase {
 	 * Test PDF validation for non-existent file
 	 */
 	public function test_is_valid_pdf_nonexistent_file() {
-		$this->skip_on_php_82_if_needed();
 		$encoder = new File_Encoder();
 		$result  = $encoder->is_valid_pdf( '/nonexistent/file.pdf' );
 
@@ -72,7 +56,6 @@ class File_Encoder_Test extends WP_UnitTestCase {
 	 * Test PDF validation infers from extension
 	 */
 	public function test_is_valid_pdf_infers_from_extension() {
-		$this->skip_on_php_82_if_needed();
 		$encoder = new File_Encoder();
 
 		// Create a temporary test file with .pdf extension
@@ -92,7 +75,6 @@ class File_Encoder_Test extends WP_UnitTestCase {
 	 * Test base64 encoding of file content
 	 */
 	public function test_encode_file_content() {
-		$this->skip_on_php_82_if_needed();
 		$encoder = new File_Encoder();
 
 		// Create a temporary test file

@@ -11,24 +11,11 @@ use PRC\Platform\PDF_Extraction\OCR\Domain\OCR_Response;
  * OCR Response value object tests
  */
 class OCR_Response_Test extends WP_UnitTestCase {
-	/**
-	 * Skip tests that trigger WordPress meta operations on PHP 8.2+
-	 * Due to WordPress core bug with SERIALIZATION_FORMAT_USE_UNSERIALIZE constant
-	 */
-	protected function skip_on_php_82_if_needed() {
-		if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
-			$this->markTestSkipped(
-				'WordPress 6.8.x has a SERIALIZATION_FORMAT_USE_UNSERIALIZE constant bug on PHP 8.2+. ' .
-				'Skipping tests that create posts/users/meta. These features work correctly in production.'
-			);
-		}
-	}
 
 	/**
 	 * Test successful response creation
 	 */
 	public function test_create_successful_response() {
-		$this->skip_on_php_82_if_needed();
 		$response = new OCR_Response(
 			true,
 			'Extracted text',
@@ -53,7 +40,6 @@ class OCR_Response_Test extends WP_UnitTestCase {
 	 * Test failed response creation
 	 */
 	public function test_create_failed_response() {
-		$this->skip_on_php_82_if_needed();
 		$response = new OCR_Response( false );
 
 		$this->assertFalse( $response->is_success() );
@@ -65,7 +51,6 @@ class OCR_Response_Test extends WP_UnitTestCase {
 	 * Test character count calculation
 	 */
 	public function test_character_count() {
-		$this->skip_on_php_82_if_needed();
 		$response = new OCR_Response(
 			true,
 			'This is a test with 30 chars',
@@ -77,14 +62,15 @@ class OCR_Response_Test extends WP_UnitTestCase {
 			array()
 		);
 
-		$this->assertEquals( 29, $response->get_character_count() );
+		// 'This is a test with 30 chars' is 28 characters; the label is a
+		// description, not a count.
+		$this->assertEquals( 28, $response->get_character_count() );
 	}
 
 	/**
 	 * Test empty text response
 	 */
 	public function test_empty_text_response() {
-		$this->skip_on_php_82_if_needed();
 		$response = new OCR_Response(
 			true,
 			'',
