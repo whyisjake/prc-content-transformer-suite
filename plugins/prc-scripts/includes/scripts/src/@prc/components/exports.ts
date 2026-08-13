@@ -3,9 +3,6 @@
  * Re-exports all components from their modules.
  */
 
-// Auth Provider Context
-export { ProvideAuth, useAuth } from './auth-provider-context';
-
 // Detach Blocks Toolbar Control
 export { default as DetachBlocksToolbarControl } from './detach-blocks-toolbar-control';
 

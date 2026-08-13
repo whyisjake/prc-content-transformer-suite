@@ -34,30 +34,23 @@ jobs:
           php-version: '8.2'
           tools: composer:v2
 
-      - name: Install PHP dependencies (prc-apple-news)
+      # Derived from disk rather than listed by hand. The hand-written list
+      # had drifted: prc-audio-narration and prc-scripts both declare runtime
+      # requirements and both loaded their autoloader at boot, but neither had
+      # a step here, so they would have shipped without vendor/.
+      - name: Install PHP dependencies
+        env:
+          # prc-scripts resolves two dependencies from pewresearch VCS repos.
+          # They are public, but composer still talks to the GitHub API to read
+          # them, and unauthenticated requests are rate limited.
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
         run: |
-          cd plugins/prc-apple-news
-          composer install --no-dev --optimize-autoloader --classmap-authoritative
-
-      - name: Install PHP dependencies (prc-content-transformer)
-        run: |
-          cd plugins/prc-content-transformer
-          composer install --no-dev --optimize-autoloader --classmap-authoritative
-
-      - name: Install PHP dependencies (prc-email-builder)
-        run: |
-          cd plugins/prc-email-builder
-          composer install --no-dev --optimize-autoloader --classmap-authoritative
-
-      - name: Install PHP dependencies (prc-markdown-for-agents)
-        run: |
-          cd plugins/prc-markdown-for-agents
-          composer install --no-dev --optimize-autoloader --classmap-authoritative
-
-      - name: Install PHP dependencies (prc-pdf-extraction)
-        run: |
-          cd plugins/prc-pdf-extraction
-          composer install --no-dev --optimize-autoloader --classmap-authoritative
+          for dir in plugins/*/; do
+            [ -f "$dir/composer.json" ] || continue
+            echo "::group::composer install ${dir}"
+            ( cd "$dir" && composer install --no-dev --optimize-autoloader --classmap-authoritative )
+            echo "::endgroup::"
+          done
 
       - name: Sanitize icon library (verify no Pro sprites)
         run: bash plugins/prc-icon-library/bin/sanitize-public-release.sh
@@ -65,50 +58,18 @@ jobs:
       - name: Create dist directory
         run: mkdir -p dist
 
-      - name: Package prc-scripts
+      # Also derived from disk. The hand-written list packaged
+      # markdown-comment-block, which is not in this repo -- zip exits 12 on an
+      # empty archive, so the step failed and no release was ever published --
+      # while omitting prc-audio-narration entirely.
+      - name: Package plugins
         run: |
-          zip -r dist/prc-scripts.zip plugins/prc-scripts \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-icon-library
-        run: |
-          zip -r dist/prc-icon-library.zip plugins/prc-icon-library \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-post-publish-pipeline
-        run: |
-          zip -r dist/prc-post-publish-pipeline.zip plugins/prc-post-publish-pipeline \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-markdown-for-agents
-        run: |
-          zip -r dist/prc-markdown-for-agents.zip plugins/prc-markdown-for-agents \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-pdf-extraction
-        run: |
-          zip -r dist/prc-pdf-extraction.zip plugins/prc-pdf-extraction \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-content-transformer
-        run: |
-          zip -r dist/prc-content-transformer.zip plugins/prc-content-transformer \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-apple-news
-        run: |
-          zip -r dist/prc-apple-news.zip plugins/prc-apple-news \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package prc-email-builder
-        run: |
-          zip -r dist/prc-email-builder.zip plugins/prc-email-builder \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
-
-      - name: Package markdown-comment-block
-        run: |
-          zip -r dist/markdown-comment-block.zip plugins/markdown-comment-block \
-            --exclude "*/node_modules/*" --exclude "*/.git/*"
+          for dir in plugins/*/; do
+            name=$(basename "$dir")
+            zip -r "dist/${name}.zip" "plugins/${name}" \
+              --exclude "*/node_modules/*" --exclude "*/.git/*"
+          done
+          ls -lh dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
