@@ -34,18 +34,18 @@ jobs:
           php-version: '8.2'
           tools: composer:v2
 
-      # Derived from disk rather than listed by hand. The hand-written list
-      # had drifted: prc-audio-narration and prc-scripts both declare runtime
-      # requirements and both loaded their autoloader at boot, but neither had
-      # a step here, so they would have shipped without vendor/.
+      # Both loops below derive from the contents of plugins/ rather than a
+      # hand-written list, which is what keeps them from drifting again.
+      #
+      # prc-scripts is the one exclusion, and it is deliberate. It is not a
+      # released plugin: it exists so the @prc/* packages under
+      # includes/scripts/src have somewhere to live, and consuming plugins
+      # compile those into their own bundles at build time. Shipping it would
+      # only reintroduce the runtime coupling this arrangement removes.
       - name: Install PHP dependencies
-        env:
-          # prc-scripts resolves two dependencies from pewresearch VCS repos.
-          # They are public, but composer still talks to the GitHub API to read
-          # them, and unauthenticated requests are rate limited.
-          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
         run: |
           for dir in plugins/*/; do
+            [ "$(basename "$dir")" = "prc-scripts" ] && continue
             [ -f "$dir/composer.json" ] || continue
             echo "::group::composer install ${dir}"
             ( cd "$dir" && composer install --no-dev --optimize-autoloader --classmap-authoritative )
@@ -58,14 +58,11 @@ jobs:
       - name: Create dist directory
         run: mkdir -p dist
 
-      # Also derived from disk. The hand-written list packaged
-      # markdown-comment-block, which is not in this repo -- zip exits 12 on an
-      # empty archive, so the step failed and no release was ever published --
-      # while omitting prc-audio-narration entirely.
       - name: Package plugins
         run: |
           for dir in plugins/*/; do
             name=$(basename "$dir")
+            [ "$name" = "prc-scripts" ] && continue
             zip -r "dist/${name}.zip" "plugins/${name}" \
               --exclude "*/node_modules/*" --exclude "*/.git/*"
           done
