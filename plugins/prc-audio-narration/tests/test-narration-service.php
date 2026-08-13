@@ -257,11 +257,16 @@ class NarrationServiceTest extends WP_UnitTestCase {
 		);
 		$script   = implode( "\n\n", array_fill( 0, 4, 'A paragraph of narration text here.' ) );
 
-		$estimate = $this->service( $script, $provider )->estimate( $post_id );
+		$service  = $this->service( $script, $provider );
+		$estimate = $service->estimate( $post_id );
 
-		$this->assertEquals( mb_strlen( $script ), $estimate['characters'] );
+		// The estimate covers the attribution line too, since that is part of
+		// what gets synthesized and billed.
+		$expected = mb_strlen( $service->with_attribution( get_post( $post_id ), $script ) );
+
+		$this->assertEquals( $expected, $estimate['characters'] );
 		$this->assertGreaterThan( 1, $estimate['chunks'] );
-		$this->assertEqualsWithDelta( mb_strlen( $script ) * 0.001, $estimate['estimated_cost'], 0.000001 );
+		$this->assertEqualsWithDelta( $expected * 0.001, $estimate['estimated_cost'], 0.000001 );
 		$this->assertEquals( 'fake', $estimate['provider'] );
 	}
 
@@ -298,6 +303,120 @@ class NarrationServiceTest extends WP_UnitTestCase {
 		);
 
 		$this->assertTrue( $store->is_stale( $post_id ) );
+	}
+
+	/**
+	 * The spoken attribution names the publication and the full title.
+	 */
+	public function test_attribution_line_names_source_and_title() {
+		$post_id = $this->make_post();
+		$line    = $this->service( 'x' )->attribution_line( get_post( $post_id ) );
+
+		$this->assertStringContainsString( get_bloginfo( 'name' ), $line );
+		$this->assertStringContainsString( 'Trust in local news', $line );
+	}
+
+	/**
+	 * A colon in the title is spoken as a comma.
+	 *
+	 * A colon reads as an abrupt stop; the subtitle should run on.
+	 */
+	public function test_attribution_line_speaks_colon_as_comma() {
+		$post_id = self::factory()->post->create(
+			array( 'post_title' => 'Trust in Local News: Partisan Gaps Widen' )
+		);
+
+		$line = $this->service( 'x' )->attribution_line( get_post( $post_id ) );
+
+		$this->assertStringContainsString( 'Trust in Local News, Partisan Gaps Widen', $line );
+		$this->assertStringNotContainsString( ':', $line );
+	}
+
+	/**
+	 * The whole title survives, including anything after a colon.
+	 *
+	 * This is the failure that moved the line out of the prompt: the model
+	 * reliably dropped the half of the title carrying the actual finding.
+	 */
+	public function test_attribution_line_keeps_subtitle() {
+		$post_id = self::factory()->post->create(
+			array( 'post_title' => 'Trust in Local News: Partisan Gaps Widen' )
+		);
+
+		$this->assertStringContainsString(
+			'Partisan Gaps Widen',
+			$this->service( 'x' )->attribution_line( get_post( $post_id ) )
+		);
+	}
+
+	/**
+	 * A post with no title yields no attribution rather than a stray period.
+	 */
+	public function test_attribution_line_empty_without_title() {
+		$post_id = self::factory()->post->create( array( 'post_title' => '' ) );
+
+		$this->assertSame( '', $this->service( 'x' )->attribution_line( get_post( $post_id ) ) );
+	}
+
+	/**
+	 * The publication name is filterable.
+	 *
+	 * The site title is not always how an organization says its name aloud.
+	 */
+	public function test_attribution_source_is_filterable() {
+		$post_id = $this->make_post();
+
+		add_filter( 'prc_audio_narration_attribution_source', fn() => 'the Pew Research Center' );
+
+		$this->assertStringStartsWith(
+			'From the Pew Research Center.',
+			$this->service( 'x' )->attribution_line( get_post( $post_id ) )
+		);
+	}
+
+	/**
+	 * The generated script opens with the attribution.
+	 */
+	public function test_generated_script_opens_with_attribution() {
+		$post_id  = $this->make_post();
+		$provider = new Fake_TTS_Provider( 'fake' );
+
+		$this->service( 'A majority of Americans agree.', $provider )->generate( $post_id );
+
+		$sent = $provider->last_request->get_text();
+
+		$this->assertStringStartsWith( 'From ' . get_bloginfo( 'name' ), $sent );
+		$this->assertStringContainsString( 'Trust in local news', $sent );
+		$this->assertStringContainsString( 'A majority of Americans agree.', $sent );
+	}
+
+	/**
+	 * Attribution is not added twice.
+	 *
+	 * Cached scripts written under an older spec may already open with it.
+	 */
+	public function test_attribution_is_not_duplicated() {
+		$post_id = $this->make_post();
+		$service = $this->service( 'x' );
+		$line    = $service->attribution_line( get_post( $post_id ) );
+
+		$already = $line . "\n\nThe article body.";
+		$result  = $service->with_attribution( get_post( $post_id ), $already );
+
+		$this->assertEquals( 1, substr_count( $result, $line ) );
+	}
+
+	/**
+	 * The cost estimate covers the attribution that will be synthesized.
+	 */
+	public function test_estimate_includes_attribution() {
+		$post_id = $this->make_post();
+		$script  = 'A majority of Americans agree.';
+
+		$service  = $this->service( $script );
+		$estimate = $service->estimate( $post_id );
+
+		$this->assertGreaterThan( mb_strlen( $script ), $estimate['characters'] );
 	}
 
 	/**

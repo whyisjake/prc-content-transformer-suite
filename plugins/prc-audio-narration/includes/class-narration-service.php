@@ -120,6 +120,14 @@ class Narration_Service {
 			return $script;
 		}
 
+		$post = get_post( $post_id );
+		if ( $post ) {
+			// Estimate against the script that will actually be synthesized,
+			// attribution included, so the figure shown before generating
+			// matches what gets billed.
+			$script = $this->with_attribution( $post, $script );
+		}
+
 		$characters = mb_strlen( $script );
 		$max        = $this->orchestrator->get_max_characters();
 		$chunks     = $max > 0 ? $this->chunker->chunk( $script, $max ) : array();
@@ -178,6 +186,8 @@ class Narration_Service {
 				'The narration script for this post is empty.'
 			);
 		}
+
+		$script = $this->with_attribution( $post, (string) $script );
 
 		$voice_id = '' !== $options['voice_id'] ? $options['voice_id'] : Settings::default_voice_id();
 		$chunks   = $this->chunker->chunk( $script, $provider->get_max_characters() );
@@ -260,6 +270,91 @@ class Narration_Service {
 	 */
 	public function delete( int $post_id ): bool {
 		return $this->store->delete( $post_id );
+	}
+
+	/**
+	 * Build the spoken attribution line for a post.
+	 *
+	 * Composed from the post's own title and the site name rather than asked
+	 * of the model. The title is data we already hold, and a model asked to
+	 * reproduce it will paraphrase, truncate at a colon, or invent a
+	 * replacement -- all of which were observed before this moved into code.
+	 * A listener hearing only the first sentence must learn what this is and
+	 * who published it, and that sentence is too load-bearing to leave to
+	 * generation.
+	 *
+	 * @param \WP_Post $post The post.
+	 * @return string Empty string when there is no title to speak.
+	 */
+	public function attribution_line( \WP_Post $post ): string {
+		$title = trim( wp_strip_all_tags( get_the_title( $post ) ) );
+
+		if ( '' === $title ) {
+			return '';
+		}
+
+		// A colon reads as an abrupt stop; spoken subtitles run on with a
+		// comma. "Trust in Local News: Partisan Gaps Widen" becomes
+		// "Trust in Local News, Partisan Gaps Widen".
+		$title = preg_replace( '/\s*:\s*/', ', ', $title );
+		$title = rtrim( $title, ' .' );
+
+		/**
+		 * Filter the publication named in the spoken attribution.
+		 *
+		 * Defaults to the site title, which is not always how an organization
+		 * says its own name aloud.
+		 *
+		 * @param string   $source The publication name.
+		 * @param \WP_Post $post   The post being narrated.
+		 */
+		$source = trim(
+			(string) apply_filters(
+				'prc_audio_narration_attribution_source',
+				get_bloginfo( 'name' ),
+				$post
+			)
+		);
+
+		// "From X. Title." reads as a broadcast intro; the bare site name
+		// followed by a title sounds like two disconnected fragments.
+		$line = '' !== $source
+			? sprintf( 'From %s. %s.', rtrim( $source, ' .' ), $title )
+			: sprintf( '%s.', $title );
+
+		/**
+		 * Filter the complete spoken attribution line.
+		 *
+		 * @param string   $line The attribution line.
+		 * @param \WP_Post $post The post being narrated.
+		 */
+		return (string) apply_filters( 'prc_audio_narration_attribution_line', $line, $post );
+	}
+
+	/**
+	 * Prefix a script with its spoken attribution.
+	 *
+	 * Idempotent: a script that already opens with the attribution is left
+	 * alone, so a cached script generated under an older format spec is not
+	 * given a second one.
+	 *
+	 * @param \WP_Post $post   The post.
+	 * @param string   $script The narration script.
+	 * @return string
+	 */
+	public function with_attribution( \WP_Post $post, string $script ): string {
+		$line   = $this->attribution_line( $post );
+		$script = trim( $script );
+
+		if ( '' === $line ) {
+			return $script;
+		}
+
+		if ( 0 === strncasecmp( $script, $line, strlen( $line ) ) ) {
+			return $script;
+		}
+
+		return $line . "\n\n" . $script;
 	}
 
 	/**

@@ -44,17 +44,9 @@ Every element of the source must survive into the audio in some spoken form. Whe
 
 ## Opening and Closing
 
-**The first line of the script must be a spoken attribution naming the piece and its source.** This is required, not optional. The source document's title is supplied as a top-level heading; unlike every other heading, it does not become a transition — it becomes this opening line. A listener who hears only the first sentence must know what they are listening to and who produced it.
+**Do not write an opening line naming the publication or the title.** One is added automatically from the post's own data before the script is synthesized, so anything you write here would be spoken twice.
 
-Use exactly this shape, substituting the supplied title:
-
-```
-From the Pew Research Center. Trust in Local News: Partisan Gaps Widen.
-
-A majority of Americans, 62 percent, say they trust local news outlets...
-```
-
-Do not invent a title — use the one supplied. Do not begin with a finding, a statistic, or a sentence from the body. Follow the attribution with a paragraph break, then begin the article.
+Begin directly with the article's first substantive sentence. Ignore the source document's top-level title heading entirely — unlike the other headings, it does not become a transition and does not appear in the script at all.
 
 Close with a short spoken line indicating the piece has ended. Do not add a call to action, a subscription pitch, or any content not present in the source.
 
