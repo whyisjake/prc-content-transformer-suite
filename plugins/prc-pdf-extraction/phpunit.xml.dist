@@ -10,7 +10,14 @@
 	>
 	<testsuites>
 		<testsuite name="PRC PDF Extraction Test Suite">
-			<directory>./tests/</directory>
+			<!-- Test files follow the WordPress test-*.php convention rather than
+			     PHPUnit's default *Test.php suffix. Without the suffix attribute
+			     PHPUnit matches none of them and reports "No tests executed!"
+			     while exiting 0, which reads as a passing suite. -->
+			<directory suffix=".php">./tests/</directory>
+			<exclude>./tests/bootstrap.php</exclude>
+			<exclude>./tests/bootstrap-vip.php</exclude>
+			<exclude>./tests/wp-tests-config.php</exclude>
 		</testsuite>
 	</testsuites>
 	<coverage processUncoveredFiles="true">

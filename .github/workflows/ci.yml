@@ -37,10 +37,6 @@ jobs:
         # green light that proves nothing.
         #
         # Not yet included, and why:
-        #   prc-pdf-extraction      - phpunit.xml.dist has no `suffix` attribute,
-        #                             so PHPUnit looks for *Test.php and matches
-        #                             none of its test-*.php files. Reports
-        #                             "No tests executed!" and exits 0.
         #   prc-markdown-for-agents - tests/bootstrap.php requires
         #                             prc-pdf-extraction/vendor/autoload.php,
         #                             so its suite cannot run standalone.
@@ -49,6 +45,7 @@ jobs:
         #   prc-apple-news          - same as above.
         plugin:
           - prc-audio-narration
+          - prc-pdf-extraction
 
     steps:
       - name: Checkout

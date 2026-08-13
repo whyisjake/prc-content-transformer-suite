@@ -66,6 +66,12 @@ class REST_API {
 							return is_numeric( $value ) && $value > 0;
 						},
 					),
+					'force'         => array(
+						'required'    => false,
+						'type'        => 'boolean',
+						'default'     => false,
+						'description' => 'Reprocess an attachment that already has an extraction. Without this, an extracted attachment is skipped rather than paying for OCR again.',
+					),
 				),
 			)
 		);
@@ -158,7 +164,8 @@ class REST_API {
 		}
 
 		$user_id = get_current_user_id();
-		$job_id  = Action_Scheduler_Handler::schedule( $post_id, $attachment_id, $user_id );
+		$force   = (bool) $request->get_param( 'force' );
+		$job_id  = Action_Scheduler_Handler::schedule( $post_id, $attachment_id, $user_id, $force );
 
 		if ( false === $job_id ) {
 			return new \WP_Error(

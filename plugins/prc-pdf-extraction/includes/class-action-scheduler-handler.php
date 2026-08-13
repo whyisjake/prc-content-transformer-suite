@@ -43,19 +43,20 @@ class Action_Scheduler_Handler {
 	 * available when Action Scheduler processes queued jobs.
 	 */
 	public static function init(): void {
-		add_action( self::ACTION_HOOK, array( __CLASS__, 'process' ), 10, 3 );
+		add_action( self::ACTION_HOOK, array( __CLASS__, 'process' ), 10, 4 );
 		add_action( self::FAILED_HOOK, array( __CLASS__, 'notify_failure' ), 10, 4 );
 	}
 
 	/**
 	 * Enqueue an async Action Scheduler job for a single topline extraction.
 	 *
-	 * @param int $post_id       Parent post ID.
-	 * @param int $attachment_id Topline PDF attachment ID.
-	 * @param int $user_id       User who requested the conversion (for failure emails).
+	 * @param int  $post_id       Parent post ID.
+	 * @param int  $attachment_id Topline PDF attachment ID.
+	 * @param int  $user_id       User who requested the conversion (for failure emails).
+	 * @param bool $force         Reprocess an attachment that is already extracted.
 	 * @return int|false Action Scheduler job ID, or false when AS is unavailable.
 	 */
-	public static function schedule( int $post_id, int $attachment_id, int $user_id = 0 ) {
+	public static function schedule( int $post_id, int $attachment_id, int $user_id = 0, bool $force = false ) {
 		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
 			return false;
 		}
@@ -66,6 +67,7 @@ class Action_Scheduler_Handler {
 				'post_id'       => $post_id,
 				'attachment_id' => $attachment_id,
 				'user_id'       => $user_id,
+				'force'         => $force,
 			),
 			self::ACTION_GROUP
 		);
@@ -158,12 +160,16 @@ class Action_Scheduler_Handler {
 	 * Throwing an exception causes Action Scheduler to mark the job as failed
 	 * and schedule an automatic retry.
 	 *
-	 * @param int $post_id       Parent post ID.
-	 * @param int $attachment_id Topline PDF attachment ID.
-	 * @param int $user_id       User who requested the conversion.
+	 * An attachment that already has an extraction is skipped unless $force is
+	 * set, so a duplicate or retried job does not pay for OCR a second time.
+	 *
+	 * @param int  $post_id       Parent post ID.
+	 * @param int  $attachment_id Topline PDF attachment ID.
+	 * @param int  $user_id       User who requested the conversion.
+	 * @param bool $force         Reprocess an attachment that is already extracted.
 	 * @throws \RuntimeException When OCR extraction or post-save fails.
 	 */
-	public static function process( int $post_id, int $attachment_id, int $user_id = 0 ): void {
+	public static function process( int $post_id, int $attachment_id, int $user_id = 0, bool $force = false ): void {
 		$service = new Extraction_Service();
 
 		// Validate parent post.
@@ -190,8 +196,29 @@ class Action_Scheduler_Handler {
 			return;
 		}
 
-		// Check for existing extraction — update it if present.
+		// Check for existing extraction.
 		$existing_id = $service->get_extraction_for_material( $post_id, $attachment_id );
+
+		// Already extracted, and this was not an explicit reprocess: stop
+		// before downloading the PDF or calling a provider. OCR is billed per
+		// document, so re-running it because a job was queued twice is a real
+		// cost for no new information. This matches the CLI, which has always
+		// required --force to reprocess an extracted attachment.
+		if ( $existing_id && ! $force ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( "prc-pdf-extraction: process action — attachment {$attachment_id} on post {$post_id} is already extracted (extraction {$existing_id}); skipping. Pass force to reprocess." );
+
+			/**
+			 * Fires when processing is skipped because an extraction exists.
+			 *
+			 * @param int $post_id       The parent post ID.
+			 * @param int $attachment_id The attachment ID.
+			 * @param int $existing_id   The existing extraction ID.
+			 */
+			do_action( 'prc_pdf_extraction_process_skipped', $post_id, $attachment_id, $existing_id );
+
+			return;
+		}
 
 		// Resolve the PDF file path.
 		$file_path = $service->get_file_path_from_attachment( $attachment_id, $material );

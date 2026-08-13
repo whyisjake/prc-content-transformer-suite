@@ -194,6 +194,102 @@ class ActionSchedulerHandlerTest extends WP_UnitTestCase {
 
 		// Still exactly one extraction — the pre-existing one.
 		$this->assertCount( 1, $extractions );
+	}
+
+	/**
+	 * Skipping happens before the PDF is fetched.
+	 *
+	 * The point of the guard is cost: OCR is billed per document, so a
+	 * duplicate or retried job must not download the file or call a provider.
+	 * The fixture URL is unreachable, so reaching the download at all would
+	 * throw — which is precisely what this asserts does not happen.
+	 */
+	public function test_process_skips_before_touching_the_pdf() {
+		$parent_id     = wp_insert_post( array(
+			'post_type'   => 'post',
+			'post_title'  => 'Parent for skip test',
+			'post_status' => 'publish',
+		) );
+		$attachment_id = 201;
+
+		update_post_meta( $parent_id, 'reportMaterials', array(
+			array(
+				'type'         => 'topline',
+				'label'        => 'Skip Topline',
+				'attachmentId' => $attachment_id,
+				'url'          => 'https://example.com/unreachable.pdf',
+			),
+		) );
+
+		$existing_id = wp_insert_post( array(
+			'post_type'   => Content_Type::get_post_type(),
+			'post_title'  => 'Pre-existing Extraction',
+			'post_parent' => $parent_id,
+			'post_status' => 'publish',
+		) );
+		update_post_meta( $existing_id, '_pdf_source_attachment_id', $attachment_id );
+
+		$skipped = array();
+		add_action(
+			'prc_pdf_extraction_process_skipped',
+			function ( $post_id, $attachment, $existing ) use ( &$skipped ) {
+				$skipped = compact( 'post_id', 'attachment', 'existing' );
+			},
+			10,
+			3
+		);
+
+		Action_Scheduler_Handler::process( $parent_id, $attachment_id );
+
+		$this->assertSame(
+			array(
+				'post_id'    => $parent_id,
+				'attachment' => $attachment_id,
+				'existing'   => $existing_id,
+			),
+			$skipped,
+			'Processing should report the skip rather than fetching the PDF.'
+		);
+	}
+
+	/**
+	 * Forcing reprocesses an attachment that is already extracted.
+	 *
+	 * Without this the guard would make re-extraction impossible -- after a
+	 * provider change or a prompt improvement, there would be no way to redo
+	 * the work.
+	 */
+	public function test_force_bypasses_the_skip() {
+		$parent_id     = wp_insert_post( array(
+			'post_type'   => 'post',
+			'post_title'  => 'Parent for force test',
+			'post_status' => 'publish',
+		) );
+		$attachment_id = 202;
+
+		update_post_meta( $parent_id, 'reportMaterials', array(
+			array(
+				'type'         => 'topline',
+				'label'        => 'Force Topline',
+				'attachmentId' => $attachment_id,
+				'url'          => 'https://example.com/unreachable.pdf',
+			),
+		) );
+
+		$existing_id = wp_insert_post( array(
+			'post_type'   => Content_Type::get_post_type(),
+			'post_title'  => 'Pre-existing Extraction',
+			'post_parent' => $parent_id,
+			'post_status' => 'publish',
+		) );
+		update_post_meta( $existing_id, '_pdf_source_attachment_id', $attachment_id );
+
+		// With force the guard is bypassed and processing proceeds to resolve
+		// the PDF, which is unreachable here -- so it throws. That throw is
+		// the evidence the skip did not happen.
+		$this->expectException( \RuntimeException::class );
+
+		Action_Scheduler_Handler::process( $parent_id, $attachment_id, 0, true );
 		$this->assertEquals( $existing_id, $extractions[0] );
 	}
 
