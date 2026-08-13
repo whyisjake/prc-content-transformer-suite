@@ -42,6 +42,7 @@ require_once "{$_tests_dir}/includes/functions.php";
  */
 function _manually_load_plugin() {
 	require_once __DIR__ . '/stubs/content-transformer-stubs.php';
+	require_once __DIR__ . '/stubs/knowledge-stubs.php';
 
 	// Action Scheduler ships with prc-content-transformer in production. It is
 	// pulled in as a dev dependency here so the scheduling tests -- including

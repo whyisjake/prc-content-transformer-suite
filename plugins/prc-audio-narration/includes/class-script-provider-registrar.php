@@ -89,6 +89,11 @@ CRITICAL RULES:
 			$narration_instruction .= "\n\nTARGET FORMAT SPECIFICATION:\n\n" . $format_spec;
 		}
 
+		// Site-authored editorial guidance, appended after the format spec so
+		// the hard rules are read first and the guidelines are understood as
+		// operating within them.
+		$narration_instruction .= Content_Guidelines::prompt_section();
+
 		return $narration_instruction;
 	}
 }

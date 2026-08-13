@@ -49,6 +49,7 @@ class Bootstrap {
 	private function load_dependencies() {
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-loader.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-settings.php';
+		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-content-guidelines.php';
 		require_once PRC_AUDIO_NARRATION_DIR . '/includes/class-script-provider-registrar.php';
 
 		// TTS infrastructure.
@@ -101,6 +102,7 @@ class Bootstrap {
 	 */
 	private function register_modules() {
 		new Settings( $this->loader );
+		new Content_Guidelines( $this->loader );
 		new Script_Provider_Registrar( $this->loader );
 		new Action_Scheduler_Handler( $this->loader );
 		new REST_API( $this->loader );
