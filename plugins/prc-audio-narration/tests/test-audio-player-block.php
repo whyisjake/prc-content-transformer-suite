@@ -269,6 +269,61 @@ class AudioPlayerBlockTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The wrapper carries the sync class however the block is rendered.
+	 *
+	 * The front-end script finds players by that class. It used to be dropped
+	 * on the registry path -- the one that actually runs on the front end --
+	 * which left the players unable to see each other.
+	 */
+	public function test_wrapper_carries_the_sync_class_in_both_render_paths() {
+		$post_id = $this->make_narrated_post();
+
+		$this->go_to( get_permalink( $post_id ) );
+		the_post();
+
+		$this->assertStringContainsString(
+			'prc-audio-narration-player',
+			$this->block->render(),
+			'Direct render should carry the sync class.'
+		);
+
+		$this->assertStringContainsString(
+			'prc-audio-narration-player',
+			do_blocks( '<!-- wp:prc-audio-narration/player /-->' ),
+			'Registry render should carry the sync class.'
+		);
+	}
+
+	/**
+	 * A post may carry more than one player.
+	 *
+	 * A long article wants one near the top and another at the end, so the
+	 * block must not declare supports.multiple false -- that greys it out in
+	 * the inserter once a single copy exists anywhere in the post.
+	 */
+	public function test_a_post_may_carry_more_than_one_player() {
+		$type = \WP_Block_Type_Registry::get_instance()->get_registered( 'prc-audio-narration/player' );
+
+		$this->assertNotNull( $type, 'The block should be registered.' );
+		$this->assertNotFalse(
+			$type->supports['multiple'] ?? true,
+			'The inserter should allow a second player.'
+		);
+
+		$post_id = $this->make_narrated_post();
+
+		$this->go_to( get_permalink( $post_id ) );
+		the_post();
+
+		$html = do_blocks(
+			'<!-- wp:prc-audio-narration/player /-->' .
+			'<!-- wp:prc-audio-narration/player /-->'
+		);
+
+		$this->assertSame( 2, substr_count( $html, '<audio' ) );
+	}
+
+	/**
 	 * A post whose narration is removed stops rendering the player.
 	 */
 	public function test_stops_rendering_after_narration_is_deleted() {

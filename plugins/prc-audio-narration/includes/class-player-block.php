@@ -27,6 +27,14 @@ class Player_Block {
 	const HANDLE = 'prc-audio-narration-player';
 
 	/**
+	 * Front-end script handle, referenced by block.json.
+	 *
+	 * Loaded only on pages that contain the block, and only needed when a page
+	 * carries more than one player -- the script exits early otherwise.
+	 */
+	const VIEW_HANDLE = 'prc-audio-narration-player-view';
+
+	/**
 	 * The loader instance.
 	 *
 	 * @var Loader
@@ -85,6 +93,20 @@ class Player_Block {
 			);
 
 			wp_set_script_translations( self::HANDLE, 'prc-audio-narration' );
+		}
+
+		$view_asset_path = PRC_AUDIO_NARRATION_DIR . '/build/view.asset.php';
+
+		if ( file_exists( $view_asset_path ) ) {
+			$view_asset = require $view_asset_path;
+
+			wp_register_script(
+				self::VIEW_HANDLE,
+				PRC_AUDIO_NARRATION_URL . 'build/view.js',
+				$view_asset['dependencies'],
+				$view_asset['version'],
+				true
+			);
 		}
 
 		register_block_type(
@@ -171,18 +193,23 @@ class Player_Block {
 	 * invoked outside a render pass -- from a template, a shortcode bridge, or
 	 * a test -- so the plain class list is used in that case.
 	 *
+	 * Either way the wrapper carries prc-audio-narration-player, which is how
+	 * the front-end script finds the players it has to keep in sync.
+	 *
 	 * @return string
 	 */
 	private function wrapper_attributes(): string {
+		$classes = 'wp-block-audio prc-audio-narration-player';
+
 		$in_render_pass = class_exists( '\WP_Block_Supports' )
 			&& isset( \WP_Block_Supports::$block_to_render )
 			&& null !== \WP_Block_Supports::$block_to_render;
 
 		if ( $in_render_pass ) {
-			return get_block_wrapper_attributes( array( 'class' => 'wp-block-audio' ) );
+			return get_block_wrapper_attributes( array( 'class' => $classes ) );
 		}
 
-		return 'class="wp-block-audio prc-audio-narration-player"';
+		return 'class="' . esc_attr( $classes ) . '"';
 	}
 
 	/**
