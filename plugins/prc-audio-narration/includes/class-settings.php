@@ -81,12 +81,27 @@ class Settings {
 	}
 
 	/**
+	 * Options written by the core AI connectors screen.
+	 *
+	 * Mirrors the naming prc-content-transformer already reads for Anthropic
+	 * (connectors_ai_anthropic_api_key / ais_anthropic_api_key).
+	 */
+	const CONNECTOR_OPTIONS = array(
+		'connectors_ai_elevenlabs_api_key',
+		'ais_elevenlabs_api_key',
+	);
+
+	/**
 	 * Resolve the ElevenLabs API key.
 	 *
-	 * Extends the constant-then-option chain the rest of the suite already
-	 * uses for Anthropic, rather than introducing a second configuration
-	 * mechanism. Constants win so a server-level key cannot be overridden
-	 * from the admin screen.
+	 * Order: server constants, then the core AI connectors screen, then this
+	 * plugin's own setting.
+	 *
+	 * Constants win so a server-level key cannot be overridden from wp-admin.
+	 * The connectors screen comes next because once ElevenLabs is available as
+	 * an AI provider that is the canonical place a site configures it, and a
+	 * key entered there should not need to be duplicated here. This plugin's
+	 * own field remains as a fallback for sites without a provider installed.
 	 *
 	 * @return string Empty string when no key is configured.
 	 */
@@ -96,9 +111,43 @@ class Settings {
 			return $from_constant;
 		}
 
+		$from_connector = self::api_key_from_connector();
+		if ( '' !== $from_connector ) {
+			return $from_connector;
+		}
+
 		$option_key = self::get( 'api_key', '' );
 
 		return is_string( $option_key ) ? trim( $option_key ) : '';
+	}
+
+	/**
+	 * The API key supplied by the core AI connectors screen, if any.
+	 *
+	 * @return string Empty string when no connector supplies one.
+	 */
+	public static function api_key_from_connector(): string {
+		/**
+		 * Filter the options consulted for a connector-supplied ElevenLabs key.
+		 *
+		 * The exact option name depends on how the ElevenLabs AI provider
+		 * registers itself, so it is filterable rather than hard-coded.
+		 *
+		 * @param string[] $options Option names, in precedence order.
+		 */
+		$options = (array) apply_filters(
+			'prc_audio_narration_connector_key_options',
+			self::CONNECTOR_OPTIONS
+		);
+
+		foreach ( $options as $option ) {
+			$value = get_option( $option, '' );
+			if ( is_string( $value ) && '' !== trim( $value ) ) {
+				return trim( $value );
+			}
+		}
+
+		return '';
 	}
 
 	/**

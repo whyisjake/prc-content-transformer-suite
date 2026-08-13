@@ -90,6 +90,95 @@ class SettingsTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A key from the core AI connectors screen is used.
+	 *
+	 * Once ElevenLabs is available as an AI provider, the connectors screen is
+	 * where a site configures it, and that key should not need duplicating in
+	 * this plugin's own field.
+	 */
+	public function test_resolves_key_from_connector_option() {
+		$this->require_no_constant();
+
+		update_option( 'connectors_ai_elevenlabs_api_key', 'from-connector' );
+
+		$this->assertEquals( 'from-connector', Settings::resolve_api_key() );
+
+		delete_option( 'connectors_ai_elevenlabs_api_key' );
+	}
+
+	/**
+	 * The connector key beats this plugin's own stored option.
+	 */
+	public function test_connector_beats_plugin_option() {
+		$this->require_no_constant();
+
+		update_option( Settings::OPTION_KEY, array( 'api_key' => 'from-plugin' ) );
+		update_option( 'connectors_ai_elevenlabs_api_key', 'from-connector' );
+
+		$this->assertEquals( 'from-connector', Settings::resolve_api_key() );
+
+		delete_option( 'connectors_ai_elevenlabs_api_key' );
+	}
+
+	/**
+	 * The plugin option still works when no connector supplies a key.
+	 */
+	public function test_plugin_option_used_without_connector() {
+		$this->require_no_constant();
+
+		update_option( Settings::OPTION_KEY, array( 'api_key' => 'from-plugin' ) );
+
+		$this->assertEquals( 'from-plugin', Settings::resolve_api_key() );
+	}
+
+	/**
+	 * The alternate connector option name is honoured.
+	 */
+	public function test_alternate_connector_option_name() {
+		$this->require_no_constant();
+
+		update_option( 'ais_elevenlabs_api_key', 'from-ais' );
+
+		$this->assertEquals( 'from-ais', Settings::resolve_api_key() );
+
+		delete_option( 'ais_elevenlabs_api_key' );
+	}
+
+	/**
+	 * The consulted connector options are filterable.
+	 *
+	 * The exact option name depends on how the ElevenLabs provider registers
+	 * itself, which is not settled yet.
+	 */
+	public function test_connector_options_are_filterable() {
+		$this->require_no_constant();
+
+		update_option( 'my_custom_elevenlabs_key', 'from-custom' );
+		add_filter(
+			'prc_audio_narration_connector_key_options',
+			fn() => array( 'my_custom_elevenlabs_key' )
+		);
+
+		$this->assertEquals( 'from-custom', Settings::resolve_api_key() );
+
+		delete_option( 'my_custom_elevenlabs_key' );
+	}
+
+	/**
+	 * A whitespace-only connector value is treated as unconfigured.
+	 */
+	public function test_blank_connector_value_ignored() {
+		$this->require_no_constant();
+
+		update_option( 'connectors_ai_elevenlabs_api_key', '   ' );
+		update_option( Settings::OPTION_KEY, array( 'api_key' => 'from-plugin' ) );
+
+		$this->assertEquals( 'from-plugin', Settings::resolve_api_key() );
+
+		delete_option( 'connectors_ai_elevenlabs_api_key' );
+	}
+
+	/**
 	 * A constant beats the stored option.
 	 *
 	 * This is the security-relevant half of the contract: a server-level key
