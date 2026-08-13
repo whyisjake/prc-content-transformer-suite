@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"description": "Convert articles into narrated audio",
 	"scripts": {
-		"build": "wp-scripts build src/editor.js src/settings.js src/audio-player/index.js --output-path=build",
-		"start": "wp-scripts start src/editor.js src/settings.js src/audio-player/index.js --output-path=build",
+		"build": "wp-scripts build src/editor.js src/settings.js src/audio-player/index.js src/audio-player/view.js --output-path=build",
+		"start": "wp-scripts start src/editor.js src/settings.js src/audio-player/index.js src/audio-player/view.js --output-path=build",
 		"lint:js": "wp-scripts lint-js src",
 		"test:php": "npx --yes @wordpress/env@11.13.0 run tests-cli --env-cwd=wp-content/plugins/prc-audio-narration \"vendor/bin/phpunit\"",
 		"test:php:local": "composer test"

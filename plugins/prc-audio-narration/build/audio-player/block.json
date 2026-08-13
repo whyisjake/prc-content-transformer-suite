@@ -5,7 +5,7 @@
   "title": "Audio Narration Player",
   "category": "media",
   "icon": "controls-volumeon",
-  "description": "Plays this article's narrated audio. Renders nothing when the article has no narration, or when the narration is out of date.",
+  "description": "Plays this article's narrated audio. Renders nothing when the article has no narration.",
   "keywords": [
     "audio",
     "narration",
@@ -18,7 +18,6 @@
   ],
   "supports": {
     "html": false,
-    "multiple": false,
     "reusable": false,
     "align": [
       "wide",
@@ -39,5 +38,6 @@
       "default": true
     }
   },
-  "editorScript": "prc-audio-narration-player"
+  "editorScript": "prc-audio-narration-player",
+  "viewScript": "prc-audio-narration-player-view"
 }

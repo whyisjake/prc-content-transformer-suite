@@ -124,8 +124,9 @@ function Edit( { attributes, context, setAttributes } ) {
 			</figure>
 		);
 	} else {
-		// Every non-ready state renders nothing on the front end, so the
-		// preview says which one it is rather than showing a dead player.
+		// Stale narration still plays; the rest render nothing at all. Either
+		// way the preview says which state it is in rather than showing a
+		// player that may or may not be there for a reader.
 		const reasons = {
 			stale: __(
 				'Narration is out of date. It still plays on the front end until it is regenerated.',
