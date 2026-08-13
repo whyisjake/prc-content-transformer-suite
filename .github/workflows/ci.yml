@@ -37,10 +37,12 @@ jobs:
         # green light that proves nothing.
         #
         # Not yet included, and why:
-        #   prc-pdf-extraction      - phpunit.xml.dist has no `suffix` attribute,
-        #                             so PHPUnit looks for *Test.php and matches
-        #                             none of its test-*.php files. Reports
-        #                             "No tests executed!" and exits 0.
+        #   prc-pdf-extraction      - fixed in #11, which is not merged yet. Its
+        #                             phpunit.xml.dist had no `suffix` attribute,
+        #                             so PHPUnit looked for *Test.php, matched
+        #                             none of its test-*.php files, and reported
+        #                             "No tests executed!" while exiting 0. Add
+        #                             it here once #11 lands.
         #   prc-markdown-for-agents - tests/bootstrap.php requires
         #                             prc-pdf-extraction/vendor/autoload.php,
         #                             so its suite cannot run standalone.
