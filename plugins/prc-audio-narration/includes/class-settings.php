@@ -44,6 +44,7 @@ class Settings {
 
 		$this->loader->add_action( 'admin_menu', $this, 'register_page' );
 		$this->loader->add_action( 'admin_init', $this, 'register_settings' );
+		$this->loader->add_action( 'admin_enqueue_scripts', $this, 'enqueue' );
 	}
 
 	/**
@@ -267,7 +268,45 @@ class Settings {
 	}
 
 	/**
+	 * Enqueue the settings app on its own screen only.
+	 *
+	 * @param string $hook_suffix The current admin page.
+	 * @return void
+	 */
+	public function enqueue( $hook_suffix ) {
+		if ( 'settings_page_' . self::PAGE_SLUG !== $hook_suffix ) {
+			return;
+		}
+
+		$asset_path = PRC_AUDIO_NARRATION_DIR . '/build/settings.asset.php';
+
+		if ( ! file_exists( $asset_path ) ) {
+			return;
+		}
+
+		$asset = require $asset_path;
+
+		wp_enqueue_script(
+			'prc-audio-narration-settings',
+			PRC_AUDIO_NARRATION_URL . 'build/settings.js',
+			$asset['dependencies'],
+			$asset['version'],
+			true
+		);
+
+		wp_set_script_translations( 'prc-audio-narration-settings', 'prc-audio-narration' );
+
+		// The components package ships its own styles; without them the
+		// controls render unstyled.
+		wp_enqueue_style( 'wp-components' );
+	}
+
+	/**
 	 * Render the settings page.
+	 *
+	 * The screen is client-rendered. Settings are read and written through
+	 * this plugin's own REST routes rather than the options.php form post, so
+	 * the API key is never echoed back into the page.
 	 *
 	 * @return void
 	 */
@@ -276,65 +315,13 @@ class Settings {
 			return;
 		}
 
-		$settings     = self::all();
-		$from_constant = self::api_key_is_constant();
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Audio Narration', 'prc-audio-narration' ); ?></h1>
-			<form action="options.php" method="post">
-				<?php settings_fields( self::PAGE_SLUG ); ?>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row">
-							<label for="prc-audio-narration-api-key"><?php esc_html_e( 'ElevenLabs API key', 'prc-audio-narration' ); ?></label>
-						</th>
-						<td>
-							<?php if ( $from_constant ) : ?>
-								<p><em><?php esc_html_e( 'Set by a server constant. The value below is ignored.', 'prc-audio-narration' ); ?></em></p>
-							<?php endif; ?>
-							<input
-								type="password"
-								class="regular-text"
-								id="prc-audio-narration-api-key"
-								name="<?php echo esc_attr( self::OPTION_KEY ); ?>[api_key]"
-								value=""
-								autocomplete="off"
-								placeholder="<?php echo '' !== $settings['api_key'] ? esc_attr__( 'A key is saved. Leave blank to keep it.', 'prc-audio-narration' ) : ''; ?>"
-							/>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row">
-							<label for="prc-audio-narration-voice-id"><?php esc_html_e( 'Default voice ID', 'prc-audio-narration' ); ?></label>
-						</th>
-						<td>
-							<input
-								type="text"
-								class="regular-text"
-								id="prc-audio-narration-voice-id"
-								name="<?php echo esc_attr( self::OPTION_KEY ); ?>[voice_id]"
-								value="<?php echo esc_attr( $settings['voice_id'] ); ?>"
-							/>
-							<p class="description"><?php esc_html_e( 'Used for all narration unless a post overrides it.', 'prc-audio-narration' ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row">
-							<label for="prc-audio-narration-model-id"><?php esc_html_e( 'Model', 'prc-audio-narration' ); ?></label>
-						</th>
-						<td>
-							<input
-								type="text"
-								class="regular-text"
-								id="prc-audio-narration-model-id"
-								name="<?php echo esc_attr( self::OPTION_KEY ); ?>[model_id]"
-								value="<?php echo esc_attr( $settings['model_id'] ); ?>"
-							/>
-						</td>
-					</tr>
-				</table>
-				<?php submit_button(); ?>
-			</form>
+			<div id="prc-audio-narration-settings"></div>
+			<noscript>
+				<p><?php esc_html_e( 'Audio narration settings require JavaScript.', 'prc-audio-narration' ); ?></p>
+			</noscript>
 		</div>
 		<?php
 	}

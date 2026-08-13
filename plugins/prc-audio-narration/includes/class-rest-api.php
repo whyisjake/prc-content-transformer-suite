@@ -7,6 +7,8 @@
 
 namespace PRC\Platform\Audio_Narration;
 
+use PRC\Platform\Audio_Narration\TTS\Providers\ElevenLabs_Provider;
+
 /**
  * Narration status, generation, and removal endpoints.
  */
@@ -33,6 +35,7 @@ class REST_API {
 		$this->loader = $loader;
 
 		$this->loader->add_action( 'rest_api_init', $this, 'register_routes' );
+		$this->loader->add_action( 'rest_api_init', $this, 'register_settings_routes' );
 	}
 
 	/**
@@ -92,6 +95,205 @@ class REST_API {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Register the settings and voice routes.
+	 *
+	 * Settings are deliberately not exposed through core's /wp/v2/settings
+	 * endpoint. Doing so would require putting the API key in a REST-readable
+	 * option schema, and a credential should never be readable back out of an
+	 * endpoint -- it is written here and only ever reported as present.
+	 *
+	 * @return void
+	 */
+	public function register_settings_routes() {
+		register_rest_route(
+			self::NAMESPACE_V1,
+			'/settings',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'get_settings' ),
+					'permission_callback' => array( $this, 'can_manage' ),
+				),
+				array(
+					'methods'             => \WP_REST_Server::EDITABLE,
+					'callback'            => array( $this, 'update_settings' ),
+					'permission_callback' => array( $this, 'can_manage' ),
+					'args'                => array(
+						'voice_id' => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'model_id' => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'api_key'  => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE_V1,
+			'/voices',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_voices' ),
+				'permission_callback' => array( $this, 'can_manage' ),
+			)
+		);
+	}
+
+	/**
+	 * Whether the current user may manage plugin settings.
+	 *
+	 * @return bool|\WP_Error
+	 */
+	public function can_manage() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new \WP_Error(
+				'prc_audio_narration_forbidden',
+				'You are not allowed to manage narration settings.',
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Return the current settings.
+	 *
+	 * The stored key is never returned. The UI needs to know whether one is
+	 * configured and where it came from, not what it is.
+	 *
+	 * @return \WP_REST_Response
+	 */
+	public function get_settings() {
+		$models = array();
+		foreach ( ElevenLabs_Provider::MODEL_MAX_CHARACTERS as $id => $ceiling ) {
+			$models[] = array(
+				'id'             => $id,
+				'max_characters' => $ceiling,
+			);
+		}
+
+		return rest_ensure_response(
+			array(
+				'voice_id'    => Settings::get( 'voice_id', '' ),
+				'model_id'    => Settings::model_id(),
+				'models'      => $models,
+				'has_key'     => '' !== Settings::resolve_api_key(),
+				'key_source'  => $this->key_source(),
+				'key_locked'  => Settings::api_key_is_constant(),
+			)
+		);
+	}
+
+	/**
+	 * Where the active API key comes from.
+	 *
+	 * @return string One of constant, connector, option, none.
+	 */
+	private function key_source(): string {
+		if ( Settings::api_key_is_constant() ) {
+			return 'constant';
+		}
+
+		if ( '' !== Settings::api_key_from_connector() ) {
+			return 'connector';
+		}
+
+		return '' !== Settings::resolve_api_key() ? 'option' : 'none';
+	}
+
+	/**
+	 * Update settings.
+	 *
+	 * @param \WP_REST_Request $request The request.
+	 * @return \WP_REST_Response
+	 */
+	public function update_settings( $request ) {
+		$settings = Settings::all();
+
+		foreach ( array( 'voice_id', 'model_id' ) as $field ) {
+			if ( null !== $request->get_param( $field ) ) {
+				$settings[ $field ] = (string) $request->get_param( $field );
+			}
+		}
+
+		// An omitted or blank key leaves the stored one alone, so saving the
+		// form without retyping a masked field is not destructive.
+		$api_key = $request->get_param( 'api_key' );
+		if ( is_string( $api_key ) && '' !== trim( $api_key ) ) {
+			$settings['api_key'] = trim( $api_key );
+		}
+
+		update_option( Settings::OPTION_KEY, $settings );
+
+		return $this->get_settings();
+	}
+
+	/**
+	 * List the voices available from the provider.
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function get_voices() {
+		$key = Settings::resolve_api_key();
+
+		if ( '' === $key ) {
+			return rest_ensure_response( array( 'voices' => array() ) );
+		}
+
+		$cached = get_transient( 'prc_audio_narration_voices' );
+		if ( is_array( $cached ) ) {
+			return rest_ensure_response( array( 'voices' => $cached ) );
+		}
+
+		$response = wp_remote_get(
+			ElevenLabs_Provider::API_BASE . '/voices?page_size=100',
+			array(
+				'headers' => array( 'xi-api-key' => $key ),
+				'timeout' => 15,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new \WP_Error(
+				'prc_audio_narration_voices_failed',
+				$response->get_error_message(),
+				array( 'status' => 502 )
+			);
+		}
+
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( ! is_array( $body ) || empty( $body['voices'] ) ) {
+			return rest_ensure_response( array( 'voices' => array() ) );
+		}
+
+		$voices = array();
+		foreach ( $body['voices'] as $voice ) {
+			$labels   = isset( $voice['labels'] ) && is_array( $voice['labels'] ) ? $voice['labels'] : array();
+			$voices[] = array(
+				'id'          => (string) ( $voice['voice_id'] ?? '' ),
+				'name'        => (string) ( $voice['name'] ?? '' ),
+				'description' => implode( ', ', array_filter( array( $labels['accent'] ?? '', $labels['descriptive'] ?? '' ) ) ),
+			);
+		}
+
+		// Cached because the settings screen would otherwise call the provider
+		// on every render, and the voice list changes rarely.
+		set_transient( 'prc_audio_narration_voices', $voices, HOUR_IN_SECONDS );
+
+		return rest_ensure_response( array( 'voices' => $voices ) );
 	}
 
 	/**
