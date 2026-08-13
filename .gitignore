@@ -8,6 +8,7 @@ vendor/
 
 # WordPress local environment
 .wp-env/
+.wp-env.override.json
 
 # Turbo cache
 .turbo/

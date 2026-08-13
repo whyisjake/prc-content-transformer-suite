@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "prc-audio-narration/player",
+  "title": "Audio Narration Player",
+  "category": "media",
+  "icon": "controls-volumeon",
+  "description": "Plays this article's narrated audio. Renders nothing when the article has no narration, or when the narration is out of date.",
+  "keywords": [
+    "audio",
+    "narration",
+    "listen",
+    "podcast"
+  ],
+  "textdomain": "prc-audio-narration",
+  "usesContext": [
+    "postId"
+  ],
+  "supports": {
+    "html": false,
+    "multiple": false,
+    "reusable": false,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  },
+  "attributes": {
+    "label": {
+      "type": "string",
+      "default": ""
+    },
+    "showDuration": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "editorScript": "prc-audio-narration-player"
+}

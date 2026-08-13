@@ -29,6 +29,7 @@ The demo activates **prc-scripts**, **prc-icon-library**, **prc-markdown-for-age
 | `prc-markdown-for-agents` | Serve articles as Markdown via `.md` / `/markdown` URLs for AI agents and crawlers |
 | `prc-pdf-extraction` | Extract text from PDF attachments via OCR (Claude, Gemini, WP AI) and expose via the markdown endpoint |
 | `prc-content-transformer` | AI-powered middleware that converts WordPress content to Apple News Format, email HTML, or plain text |
+| `prc-audio-narration` | Rewrites articles for the ear and synthesizes them to audio via a pluggable text-to-speech layer |
 | `prc-apple-news` | Publishes content to Apple News via the Apple News API |
 | `prc-email-builder` | Newsletter authoring and Mailchimp delivery (CPT, patterns, send UI) |
 | `markdown-comment-block` | Gutenberg block that renders Markdown in the editor |
@@ -47,6 +48,7 @@ These plugins provide deep integration but are **not bundled** here:
 - [Action Scheduler](https://actionscheduler.org/) — bundled via `woocommerce/action-scheduler` Composer package in `prc-content-transformer`
 - Apple News API credentials — configure in **Settings → Apple News** after activation
 - Mailchimp API key — configure in **Settings → Email Builder** after activation
+- ElevenLabs API key — required by `prc-audio-narration` for speech synthesis; configure in **Settings → Audio Narration** after activation
 
 ## Local development
 
@@ -58,15 +60,32 @@ git clone https://github.com/pewresearch/prc-content-transformer-suite.git
 cd prc-content-transformer-suite
 npm install
 
-# 2. Add your Anthropic API key to .wp-env.json
-#    Edit the "config" block and fill in the value:
-#    "ANTHROPIC_API_KEY": "sk-ant-..."
+# 2. Add your API keys to .wp-env.override.json (gitignored — never .wp-env.json)
+#    cp .wp-env.override.json.example .wp-env.override.json
+#    then fill in the values
 
 # 3. Start the environment
 npx @wordpress/env start
 ```
 
 The environment will be available at `http://localhost:8888` (admin: `http://localhost:8888/wp-admin`, user/pass: `admin` / `password`).
+
+If those ports are already taken, create a `.wp-env.override.json` (gitignored) with different `port` / `testsPort` values rather than editing `.wp-env.json`.
+
+### Running tests
+
+PHP tests run inside the wp-env test container:
+
+```bash
+# Install the plugin's PHP dependencies once
+cd plugins/prc-audio-narration && composer install && cd ../..
+
+# Start the environment, then run the suite
+npm run env -- start
+npm run test:php
+```
+
+CI runs this same command on every pull request. Only `prc-audio-narration` is wired into that job today — see the comments in `.github/workflows/ci.yml` for what blocks the other plugins' suites from running.
 
 ### API key configuration
 
@@ -76,7 +95,32 @@ The environment will be available at `http://localhost:8888` (admin: `http://loc
 2. `PRC_PLATFORM_ANTHROPIC_API_KEY` PHP constant
 3. `connectors_ai_anthropic_api_key` / `ais_anthropic_api_key` WordPress options (set automatically when you configure the **ai-provider-for-anthropic** plugin via Settings → AI)
 
-For local wp-env development, the simplest approach is to fill in the `ANTHROPIC_API_KEY` value in `.wp-env.json` before running `npx @wordpress/env start`.
+### Where to put API keys
+
+> **`.wp-env.json` is committed to this repository.** Never put a real key in it. The empty strings in its `config` block are placeholders that keep the constants defined; the plugins treat an empty constant as "not configured" and fall through to the next source.
+
+For local development, put keys in **`.wp-env.override.json`**, which is gitignored. wp-env deep-merges its `config` block over `.wp-env.json`, so you list only what you are setting:
+
+```json
+{
+	"config": {
+		"ANTHROPIC_API_KEY": "sk-ant-...",
+		"ELEVENLABS_API_KEY": "sk_..."
+	}
+}
+```
+
+Restart the environment after editing it (`npm run env -- start`). The same file is the right place to override `port` / `testsPort` if the defaults collide with another project.
+
+For deployed environments, define the constants in `wp-config.php` (or `vip-config/vip-config.php` on WordPress VIP) — outside this repository. The admin settings screens exist as a fallback for sites without file access; a constant always wins over the stored option, so a server-level key cannot be overridden from wp-admin.
+
+`prc-audio-narration` needs an ElevenLabs API key, resolved in the same style:
+
+1. `ELEVENLABS_API_KEY` PHP constant (set via `.wp-env.json` `config`)
+2. `PRC_PLATFORM_ELEVENLABS_API_KEY` PHP constant
+3. The key saved in **Settings → Audio Narration**
+
+Constants take precedence, so a server-level key cannot be overridden from the admin screen. Narration is only ever generated when an editor explicitly asks for it — there is no hook on publish — because synthesis is billed per character and report-length content is long.
 
 ### WP-CLI
 
