@@ -440,12 +440,26 @@ function SettingsPage() {
 							</ExternalLink>
 						</Text>
 
-						{ ! settings.podcast_resolved.image && (
+						{ settings.podcast_artwork_issues?.length > 0 && (
 							<Notice status="warning" isDismissible={ false }>
-								{ __(
-									'Apple Podcasts requires channel artwork. Add an image URL below, or set a site icon, before submitting the feed.',
-									'prc-audio-narration'
-								) }
+								<strong>
+									{ __(
+										'Apple Podcasts will reject this feed:',
+										'prc-audio-narration'
+									) }
+								</strong>
+								<ul
+									style={ {
+										margin: '4px 0 0',
+										paddingLeft: '18px',
+									} }
+								>
+									{ settings.podcast_artwork_issues.map(
+										( issue ) => (
+											<li key={ issue }>{ issue }</li>
+										)
+									) }
+								</ul>
 							</Notice>
 						) }
 
