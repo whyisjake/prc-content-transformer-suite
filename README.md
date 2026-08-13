@@ -60,9 +60,9 @@ git clone https://github.com/pewresearch/prc-content-transformer-suite.git
 cd prc-content-transformer-suite
 npm install
 
-# 2. Add your Anthropic API key to .wp-env.json
-#    Edit the "config" block and fill in the value:
-#    "ANTHROPIC_API_KEY": "sk-ant-..."
+# 2. Add your API keys to .wp-env.override.json (gitignored — never .wp-env.json)
+#    cp .wp-env.override.json.example .wp-env.override.json
+#    then fill in the values
 
 # 3. Start the environment
 npx @wordpress/env start
@@ -95,7 +95,24 @@ CI runs this same command on every pull request. Only `prc-audio-narration` is w
 2. `PRC_PLATFORM_ANTHROPIC_API_KEY` PHP constant
 3. `connectors_ai_anthropic_api_key` / `ais_anthropic_api_key` WordPress options (set automatically when you configure the **ai-provider-for-anthropic** plugin via Settings → AI)
 
-For local wp-env development, the simplest approach is to fill in the `ANTHROPIC_API_KEY` value in `.wp-env.json` before running `npx @wordpress/env start`.
+### Where to put API keys
+
+> **`.wp-env.json` is committed to this repository.** Never put a real key in it. The empty strings in its `config` block are placeholders that keep the constants defined; the plugins treat an empty constant as "not configured" and fall through to the next source.
+
+For local development, put keys in **`.wp-env.override.json`**, which is gitignored. wp-env deep-merges its `config` block over `.wp-env.json`, so you list only what you are setting:
+
+```json
+{
+	"config": {
+		"ANTHROPIC_API_KEY": "sk-ant-...",
+		"ELEVENLABS_API_KEY": "sk_..."
+	}
+}
+```
+
+Restart the environment after editing it (`npm run env -- start`). The same file is the right place to override `port` / `testsPort` if the defaults collide with another project.
+
+For deployed environments, define the constants in `wp-config.php` (or `vip-config/vip-config.php` on WordPress VIP) — outside this repository. The admin settings screens exist as a fallback for sites without file access; a constant always wins over the stored option, so a server-level key cannot be overridden from wp-admin.
 
 `prc-audio-narration` needs an ElevenLabs API key, resolved in the same style:
 

@@ -1,0 +1,10 @@
+{
+	"_comment": "Copy to .wp-env.override.json (gitignored) and fill in. wp-env deep-merges the config block over .wp-env.json, so list only what you are setting. Never put real keys in .wp-env.json — it is committed.",
+	"config": {
+		"ANTHROPIC_API_KEY": "",
+		"ELEVENLABS_API_KEY": ""
+	},
+	"_ports": "Uncomment if 8888/8889 collide with another local project.",
+	"port": 8898,
+	"testsPort": 8899
+}
