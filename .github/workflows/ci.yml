@@ -66,11 +66,9 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      # Deliberately no `npm ci` / `npm install` here. The repo has no
-      # committed package-lock.json, and four plugins declare @prc/components,
-      # which is not resolvable from the public registry. PHP tests need
-      # neither, so wp-env is fetched directly at a pinned version instead of
-      # resolving the JS workspace.
+      # No `npm ci` here because these are PHP tests: the suite needs wp-env
+      # and Composer, not the JS workspace. The workspace does install cleanly
+      # now, so a JS build or lint job could add it.
 
       - name: Cache Composer packages
         uses: actions/cache@v4

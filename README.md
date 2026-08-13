@@ -191,7 +191,7 @@ cd ../prc-markdown-for-agents && composer install
 #    → prc-apple-news → prc-email-builder → markdown-comment-block
 ```
 
-> **Note:** `prc-email-builder` depends on `@prc/components`, a private package from the Pew Research Center platform. Its JS assets are committed pre-built to this repository. If you need to rebuild it, you will need access to the internal npm registry.
+> **Note:** the `@prc/*` packages several plugins depend on live in this repository, under `plugins/prc-scripts/includes/scripts/src/`. They are declared as npm workspaces, so `npm install` resolves them locally and no internal registry access is required. JS assets are still committed pre-built, so a build is only needed when changing JS.
 
 ## License
 

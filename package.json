@@ -1,6 +1,6 @@
 {
 	"name": "@prc/content-transformer-suite",
-	"description": "PRC Content Transformer Suite — open-source WordPress plugins for content transformation, AI processing, Apple News, and email delivery",
+	"description": "PRC Content Transformer Suite \u2014 open-source WordPress plugins for content transformation, AI processing, Apple News, and email delivery",
 	"version": "1.0.0",
 	"license": "GPL-2.0-or-later",
 	"private": true,
@@ -18,11 +18,13 @@
 		"plugins/prc-content-transformer",
 		"plugins/prc-audio-narration",
 		"plugins/prc-apple-news",
-		"plugins/prc-email-builder"
+		"plugins/prc-email-builder",
+		"plugins/prc-scripts/includes/scripts/src/@prc/*",
+		"plugins/prc-scripts/includes/scripts/src/third-party/*"
 	],
 	"scripts": {
-		"build": "turbo run build",
-		"dev": "turbo run build --watch",
+		"build": "turbo run build --filter='./plugins/*'",
+		"dev": "turbo run build --watch --filter='./plugins/*'",
 		"env": "npx --yes @wordpress/env@11.13.0",
 		"test:php": "npx --yes @wordpress/env@11.13.0 run tests-cli --env-cwd=wp-content/plugins/prc-audio-narration \"vendor/bin/phpunit\""
 	},

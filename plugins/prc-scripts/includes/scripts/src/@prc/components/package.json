@@ -17,9 +17,11 @@
 		"@prc/icons": "*",
 		"can-use-dom": "^0.1.0",
 		"classnames": "^2.5.1",
+		"firebase": "^12.0.0",
 		"framer-motion": "^11.0.3",
 		"picturefill": "^3.0.3",
-		"prop-types": "^15.8.1"
+		"prop-types": "^15.8.1",
+		"underscore": "^1.13.0"
 	},
 	"version": "1.0.0"
 }
