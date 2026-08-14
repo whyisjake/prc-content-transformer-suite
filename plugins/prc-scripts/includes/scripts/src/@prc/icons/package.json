@@ -11,5 +11,9 @@
 		"build": "node bin/build-index.js && wp-scripts build",
 		"build:index": "node bin/build-index.js"
 	},
-	"version": "1.0.0"
+	"version": "1.0.0",
+	"sideEffects": [
+		"*.scss",
+		"*.css"
+	]
 }

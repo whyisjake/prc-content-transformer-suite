@@ -375,10 +375,9 @@ class Settings {
 
 		$style_path = plugin_dir_path( __DIR__ ) . 'build/settings/style-index.css';
 		if ( file_exists( $style_path ) ) {
+			// Component styles are compiled into this plugin's own stylesheet,
+			// so there is no shared prc-components handle to depend on.
 			$style_deps = array( 'wp-components' );
-			if ( in_array( 'prc-components', $asset['dependencies'], true ) ) {
-				$style_deps[] = 'prc-components';
-			}
 
 			wp_enqueue_style(
 				$handle,

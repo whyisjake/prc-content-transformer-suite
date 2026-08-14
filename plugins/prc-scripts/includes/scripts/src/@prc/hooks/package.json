@@ -7,5 +7,9 @@
 	"scripts": {
 		"build": "wp-scripts build"
 	},
-	"version": "1.0.0"
+	"version": "1.0.0",
+	"sideEffects": [
+		"*.scss",
+		"*.css"
+	]
 }

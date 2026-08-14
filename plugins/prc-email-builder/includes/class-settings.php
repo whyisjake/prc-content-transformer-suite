@@ -64,10 +64,9 @@ class Settings {
 		);
 
 		if ( file_exists( PRC_EMAIL_BUILDER_DIR . '/build/settings/style-index.css' ) ) {
+			// Component styles are compiled into this plugin's own stylesheet,
+			// so there is no shared prc-components handle to depend on.
 			$style_deps = array( 'wp-components' );
-			if ( in_array( 'prc-components', $asset['dependencies'], true ) ) {
-				$style_deps[] = 'prc-components';
-			}
 
 			wp_enqueue_style(
 				$handle,
